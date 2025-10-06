@@ -38,7 +38,7 @@ export default async function ExperiencePage({
 		}
 
 		// Pass user data to our FlowMail app
-		return <FlowMailApp user={user} userId={userId} experienceId={experienceId} />;
+		return <FlowMailApp user={{...user, email: '', name: user.name || ''}} userId={userId} experienceId={experienceId} />;
 
 	} catch (error) {
 		console.error('Error in experience page:', error);

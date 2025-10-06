@@ -1975,9 +1975,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
         // Use setTimeout to ensure this runs after the component has fully rendered
         setTimeout(() => {
-          // Get template HTML from the templates array
-          const template = templates.find(t => t.name === selectedTemplate.name)
-          const html = template?.html || selectedTemplate.html || ''
+          // Get template HTML directly from selectedTemplate
+          const html = selectedTemplate.html || ''
           console.log('✅ Template HTML loaded, length:', html.length)
 
           const newFormData = {
@@ -2183,8 +2182,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     const [formData, setFormData] = useState({
       name: editingCampaign?.name || '',
       subject: editingCampaign?.subject || '',
-      preview_text: editingCampaign?.preview_text || '',
-      html_content: editingCampaign?.html_content || ''
+      preview_text: (editingCampaign as any)?.preview_text || '',
+      html_content: (editingCampaign as any)?.html_content || ''
     })
     const [updating, setUpdating] = useState(false)
 
@@ -2917,8 +2916,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
       console.log('🎨 Updating preview for template:', templateName)
 
       // Generate clean HTML without contenteditable
-      const template = templates.find(t => t.name === templateName)
-      const html = template?.html || selectedTemplate.html || ''
+      const html = selectedTemplate.html || ''
       setPreviewHtml(html)
 
       // Extract editable content for visual editor
@@ -3534,7 +3532,6 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     const handleCopy = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      e.stopImmediatePropagation()
 
       navigator.clipboard.writeText(text).then(() => {
         setCopiedItem(text)
@@ -3791,7 +3788,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
           showToastMessage(`🎉 Subscription Activated! Welcome to ${plan.name}! Receipt ID: ${result.data.receiptId}. Your subscription is now active and will renew monthly.`, 'success')
           loadDashboardData()
         } else {
-          showToastMessage(`❌ Subscription ${result.status === 'cancelled' ? 'cancelled' : 'failed'} - ${result.error || 'Please try again or contact support.'}`, 'error')
+          showToastMessage(`❌ Subscription ${result.status} - ${result.error || 'Please try again or contact support.'}`, 'error')
         }
 
       } catch (error: any) {
