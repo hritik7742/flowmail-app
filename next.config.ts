@@ -1,9 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@whop-apps/sdk']
-  },
+  serverExternalPackages: ['@whop-apps/sdk'],
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },

@@ -52,12 +52,12 @@ export async function POST(request) {
       const dailyLimit = 10
       
       // Reset daily count if needed (new day)
-      if (user.last_email_reset_date !== today) {
+        if (user.last_email_reset_date !== currentDate) {
         await supabaseAdmin
           .from('users')
           .update({ 
             emails_sent_today: 0, 
-            last_email_reset_date: today 
+            last_email_reset_date: currentDate 
           })
           .eq('id', user.id)
         currentEmailsSent = 0
@@ -206,7 +206,7 @@ export async function POST(request) {
       .eq('id', campaign.id)
 
     // Update user's email count based on plan type
-    const today = new Date().toISOString().split('T')[0]
+    const currentDate = new Date().toISOString().split('T')[0]
     
     if (user.plan === 'free') {
       // For free plan, update daily count only
