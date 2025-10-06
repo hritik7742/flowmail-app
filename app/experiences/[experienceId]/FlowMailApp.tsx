@@ -1975,7 +1975,9 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
         // Use setTimeout to ensure this runs after the component has fully rendered
         setTimeout(() => {
-          const html = getTemplateHTML(selectedTemplate.name)
+          // Get template HTML from the templates array
+          const template = templates.find(t => t.name === selectedTemplate.name)
+          const html = template?.html || selectedTemplate.html || ''
           console.log('✅ Template HTML loaded, length:', html.length)
 
           const newFormData = {
@@ -2915,7 +2917,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
       console.log('🎨 Updating preview for template:', templateName)
 
       // Generate clean HTML without contenteditable
-      const html = getTemplateHTML(templateName, data)
+      const template = templates.find(t => t.name === templateName)
+      const html = template?.html || selectedTemplate.html || ''
       setPreviewHtml(html)
 
       // Extract editable content for visual editor
