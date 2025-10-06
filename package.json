@@ -1,20 +1,29 @@
 {
-	"name": "whop-nextjs-app-template",
-	"version": "0.1.0",
+	"name": "flowmail-app",
+	"version": "1.0.0",
+	"description": "Email Marketing for Whop Creators",
 	"private": true,
 	"scripts": {
-		"dev": "whop-proxy --command 'next dev --turbopack'",
+		"dev": "whop-proxy --command=\"next dev\"",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+		"type-check": "tsc --noEmit",
+		"preview": "next build && next start"
 	},
 	"dependencies": {
+		"@heroicons/react": "^2.2.0",
+		"@supabase/supabase-js": "^2.58.0",
 		"@vercel/functions": "^2.0.3",
 		"@whop/api": "^0.0.50",
 		"@whop/react": "0.2.36",
+		"axios": "^1.12.2",
 		"next": "15.3.2",
+		"next-auth": "^4.24.11",
 		"react": "^19.0.0",
-		"react-dom": "^19.0.0"
+		"react-dom": "^19.0.0",
+		"resend": "^6.1.1",
+		"stripe": "^19.0.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
