@@ -227,7 +227,7 @@ async function handleMembershipCreated(user_id: string, plan_id: string, subscri
 		}
 
 		// Update user subscription
-		const { error } = await supabaseAdmin
+		const { error } = await (supabaseAdmin
 			.from('users')
 			.update({
 				plan: planType,
@@ -239,7 +239,7 @@ async function handleMembershipCreated(user_id: string, plan_id: string, subscri
 				subscription_updated_at: new Date().toISOString(),
 				updated_at: new Date().toISOString()
 			})
-			.eq('whop_user_id', user_id);
+			.eq('whop_user_id', user_id) as any);
 
 		if (error) {
 			console.error('Error updating membership created:', error);
@@ -260,7 +260,7 @@ async function handleMembershipCancelled(user_id: string, plan_id: string, subsc
 		console.log('Subscription ID:', subscription_id);
 
 		// Downgrade to free plan
-		const { error } = await supabaseAdmin
+		const { error } = await (supabaseAdmin
 			.from('users')
 			.update({
 				plan: 'free',
@@ -269,7 +269,7 @@ async function handleMembershipCancelled(user_id: string, plan_id: string, subsc
 				subscription_updated_at: new Date().toISOString(),
 				updated_at: new Date().toISOString()
 			})
-			.eq('whop_user_id', user_id);
+			.eq('whop_user_id', user_id) as any);
 
 		if (error) {
 			console.error('Error updating membership cancelled:', error);
