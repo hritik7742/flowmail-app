@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request) {
   try {
@@ -28,7 +23,7 @@ export async function POST(request) {
     }
 
     // Check if sender name is already taken by another user
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('whop_user_id')
       .eq('custom_sender_name', cleanSenderName)
@@ -44,7 +39,7 @@ export async function POST(request) {
       let testName = cleanSenderName + counter;
       
       while (true) {
-        const { data: testUser } = await supabase
+        const { data: testUser } = await supabaseAdmin
           .from('users')
           .select('whop_user_id')
           .eq('custom_sender_name', testName)
@@ -71,7 +66,7 @@ export async function POST(request) {
     }
 
     // Update user with professional sender info
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('users')
       .update({
         custom_sender_name: finalSenderName,
