@@ -476,7 +476,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
             // Immediately refresh user data to update usage counts
             try {
-              const userResponse = await fetch(`/api/user?whop_user_id=${userId}`)
+              const userResponse = await fetch(`/api/user?userId=${userId}`)
               if (userResponse.ok) {
                 const userData = await userResponse.json()
                 if (userData.success) {
