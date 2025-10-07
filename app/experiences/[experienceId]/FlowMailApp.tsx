@@ -73,8 +73,28 @@ interface FlowMailAppProps {
 
 
 
+// Custom hook to safely use iframe SDK
+function useSafeIframeSdk() {
+  try {
+    return useIframeSdk()
+  } catch (error) {
+    // Fallback for local development or when not in Whop context
+    console.log('IframeSdk not available, using fallback for local development')
+    return {
+      close: () => console.log('Close not available in local development'),
+      resize: () => console.log('Resize not available in local development'),
+      inAppPurchase: {
+        createCheckoutSession: () => Promise.resolve({ id: 'mock-checkout-session' }),
+        getProducts: () => Promise.resolve([]),
+        getPurchases: () => Promise.resolve([])
+      },
+      // Add other methods as needed
+    } as any
+  }
+}
+
 function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
-  const iframeSdk = useIframeSdk()
+  const iframeSdk = useSafeIframeSdk()
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [stats, setStats] = useState({
     subscribers: 0,
