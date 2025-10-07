@@ -3933,11 +3933,15 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
-                      <span>Advanced analytics</span>
+                      <span>analytics</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
                       <span>Priority support</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-300">
+                      <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
+                      <span>Future updates</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
@@ -3988,7 +3992,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
-                      <span>Advanced analytics</span>
+                      <span> analytics</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
@@ -3996,7 +4000,11 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
-                      <span>Custom templates</span>
+                      <span>Future updates</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-300">
+                      <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
+                      <span>All templates</span>
                     </div>
                   </div>
                   <button
@@ -4043,15 +4051,19 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
-                      <span>Advanced analytics</span>
+                      <span>analytics</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
                       <span>Priority support</span>
                     </div>
+                     <div className="flex items-center text-sm text-gray-300">
+                      <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
+                      <span>Future updates</span>
+                    </div>
                     <div className="flex items-center text-sm text-gray-300">
                       <CheckCircleIcon className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
-                      <span>Custom domain support</span>
+                      <span>All Templates</span>
                     </div>
                   </div>
                   <button
