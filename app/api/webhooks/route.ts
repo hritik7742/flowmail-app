@@ -12,19 +12,23 @@ export async function POST(request: NextRequest): Promise<Response> {
 		// Validate the webhook to ensure it's from Whop
 		const webhookData = await validateWebhook(request);
 
-		console.log('Webhook received:', webhookData.action, webhookData.data);
+		console.log('=== WHOP WEBHOOK RECEIVED ===');
+		console.log('Action:', webhookData.action);
+		console.log('Data:', JSON.stringify(webhookData.data, null, 2));
 
 		// Handle different webhook events
 		if (webhookData.action === "payment.succeeded") {
-			const { id, final_amount, amount_after_fees, currency, user_id, plan_id } = webhookData.data;
+			const { id, final_amount, amount_after_fees, currency, user_id, plan_id, metadata } = webhookData.data;
 
 			console.log(`Payment ${id} succeeded for ${user_id} with amount ${final_amount} ${currency}, plan: ${plan_id}`);
 
 			// Update user subscription in background
-			if (user_id && plan_id && final_amount && currency) {
+			if (user_id) {
 				waitUntil(
-					handlePaymentSuccess(user_id, plan_id, final_amount, currency)
+					handlePaymentSuccess(user_id, plan_id, final_amount, currency, metadata)
 				);
+			} else {
+				console.error('No user_id found in payment webhook');
 			}
 		}
 
@@ -61,8 +65,52 @@ export async function POST(request: NextRequest): Promise<Response> {
 	}
 }
 
-async function handlePaymentSuccess(user_id: string, plan_id: string, amount: number, currency: string) {
+async function handlePaymentSuccess(
+	user_id: string, 
+	plan_id: string | null | undefined, 
+	amount: number, 
+	currency: string,
+	metadata?: Record<string, unknown> | null
+) {
 	try {
+		console.log('=== HANDLING PAYMENT SUCCESS ===');
+		console.log('User ID:', user_id);
+		console.log('Plan ID:', plan_id);
+		console.log('Amount:', amount);
+		console.log('Currency:', currency);
+		console.log('Metadata:', metadata);
+
+		// First, check if user exists in database
+		const { data: existingUser, error: userError } = await supabaseAdmin
+			.from('users')
+			.select('*')
+			.eq('whop_user_id', user_id)
+			.single();
+
+		if (userError && userError.code !== 'PGRST116') {
+			console.error('Error checking user:', userError);
+			return;
+		}
+
+		if (!existingUser) {
+			console.log('User not found in database, creating new user...');
+			// Create user if doesn't exist
+			const { error: createError } = await (supabaseAdmin
+				.from('users')
+				.insert({
+					whop_user_id: user_id,
+					plan: 'free',
+					subscription_status: 'inactive',
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString()
+				}) as any);
+
+			if (createError) {
+				console.error('Error creating user:', createError);
+				return;
+			}
+		}
+
 		// Determine plan type based on plan_id
 		let planType = 'free';
 		if (plan_id === process.env.WHOP_STARTER_PLAN_ID) {
@@ -85,18 +133,19 @@ async function handlePaymentSuccess(user_id: string, plan_id: string, amount: nu
 				whop_subscription_id: plan_id,
 				whop_plan_id: plan_id,
 				plan_updated_at: new Date().toISOString(),
-				subscription_updated_at: new Date().toISOString()
+				subscription_updated_at: new Date().toISOString(),
+				updated_at: new Date().toISOString()
 			})
 			.eq('whop_user_id', user_id);
 
 		if (error) {
 			console.error('Error updating user subscription:', error);
 		} else {
-			console.log(`Successfully updated user ${user_id} to ${planType} plan`);
+			console.log(`✅ Successfully updated user ${user_id} to ${planType} plan`);
 		}
 
 		// Log subscription event
-		await supabaseAdmin
+		await (supabaseAdmin
 			.from('subscription_events')
 			.insert({
 				user_id: user_id,
@@ -108,9 +157,13 @@ async function handlePaymentSuccess(user_id: string, plan_id: string, amount: nu
 				metadata: {
 					amount: amount,
 					currency: currency,
-					plan_id: plan_id
-				}
-			});
+					plan_id: plan_id,
+					...metadata
+				},
+				created_at: new Date().toISOString()
+			}) as any);
+
+		console.log('=== PAYMENT SUCCESS HANDLED ===');
 
 	} catch (error) {
 		console.error('Error in handlePaymentSuccess:', error);
@@ -119,6 +172,11 @@ async function handlePaymentSuccess(user_id: string, plan_id: string, amount: nu
 
 async function handleMembershipCreated(user_id: string, plan_id: string, subscription_id: string) {
 	try {
+		console.log('=== HANDLING MEMBERSHIP CREATED ===');
+		console.log('User ID:', user_id);
+		console.log('Plan ID:', plan_id);
+		console.log('Subscription ID:', subscription_id);
+
 		let planType = 'free';
 		if (plan_id === process.env.WHOP_STARTER_PLAN_ID) {
 			planType = 'starter';
@@ -138,12 +196,15 @@ async function handleMembershipCreated(user_id: string, plan_id: string, subscri
 				whop_subscription_id: subscription_id,
 				whop_plan_id: plan_id,
 				plan_updated_at: new Date().toISOString(),
-				subscription_updated_at: new Date().toISOString()
+				subscription_updated_at: new Date().toISOString(),
+				updated_at: new Date().toISOString()
 			})
 			.eq('whop_user_id', user_id);
 
 		if (error) {
 			console.error('Error updating membership created:', error);
+		} else {
+			console.log(`✅ Successfully updated membership for user ${user_id} to ${planType} plan`);
 		}
 
 	} catch (error) {
@@ -153,6 +214,11 @@ async function handleMembershipCreated(user_id: string, plan_id: string, subscri
 
 async function handleMembershipCancelled(user_id: string, plan_id: string, subscription_id: string) {
 	try {
+		console.log('=== HANDLING MEMBERSHIP CANCELLED ===');
+		console.log('User ID:', user_id);
+		console.log('Plan ID:', plan_id);
+		console.log('Subscription ID:', subscription_id);
+
 		// Downgrade to free plan
 		const { error } = await supabaseAdmin
 			.from('users')
@@ -160,37 +226,18 @@ async function handleMembershipCancelled(user_id: string, plan_id: string, subsc
 				plan: 'free',
 				subscription_status: 'cancelled',
 				plan_updated_at: new Date().toISOString(),
-				subscription_updated_at: new Date().toISOString()
+				subscription_updated_at: new Date().toISOString(),
+				updated_at: new Date().toISOString()
 			})
 			.eq('whop_user_id', user_id);
 
 		if (error) {
 			console.error('Error updating membership cancelled:', error);
+		} else {
+			console.log(`✅ Successfully downgraded user ${user_id} to free plan`);
 		}
 
 	} catch (error) {
 		console.error('Error in handleMembershipCancelled:', error);
-	}
-}
-
-async function handleMembershipExpired(user_id: string, plan_id: string, subscription_id: string) {
-	try {
-		// Downgrade to free plan
-		const { error } = await supabaseAdmin
-			.from('users')
-			.update({
-				plan: 'free',
-				subscription_status: 'expired',
-				plan_updated_at: new Date().toISOString(),
-				subscription_updated_at: new Date().toISOString()
-			})
-			.eq('whop_user_id', user_id);
-
-		if (error) {
-			console.error('Error updating membership expired:', error);
-		}
-
-	} catch (error) {
-		console.error('Error in handleMembershipExpired:', error);
 	}
 }
