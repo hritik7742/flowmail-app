@@ -3831,31 +3831,73 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         {/* Billing Section */}
         <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
           <div className="flex items-center mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 ${
+              userPlan?.plan === 'free' ? 'bg-gradient-to-br from-gray-500 to-gray-600' :
+              userPlan?.plan === 'starter' ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
+              userPlan?.plan === 'growth' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
+              userPlan?.plan === 'pro' ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
+              'bg-gradient-to-br from-gray-500 to-gray-600'
+            }`}>
               <SparklesIcon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">Free Plan</h3>
-              <p className="text-gray-400 text-sm">$0/month • 10 emails per day</p>
+              <h3 className="text-xl font-semibold text-white">
+                {userPlan?.plan === 'free' ? 'Free Plan' : 
+                 userPlan?.plan === 'starter' ? 'Starter Plan' :
+                 userPlan?.plan === 'growth' ? 'Growth Plan' : 
+                 userPlan?.plan === 'pro' ? 'Pro Plan' : 'Free Plan'}
+              </h3>
+              <p className="text-gray-400 text-sm">
+                {userPlan?.plan === 'free' ? '$0/month • 10 emails per day' : 
+                 userPlan?.plan === 'starter' ? '$29/month • 3,000 emails per month' :
+                 userPlan?.plan === 'growth' ? '$49/month • 5,000 emails per month' : 
+                 userPlan?.plan === 'pro' ? '$129/month • 10,000 emails per month' : '$0/month • 10 emails per day'}
+              </p>
             </div>
           </div>
 
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-gray-300">Daily Email Usage</span>
-              <span className="text-sm text-gray-400">{userPlan?.emails_sent_today || 0} / 10 emails</span>
+          {/* Usage display for free plan */}
+          {userPlan?.plan === 'free' && (
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-gray-300">Daily Email Usage</span>
+                <span className="text-sm text-gray-400">{userPlan?.emails_sent_today || 0} / 10 emails</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all ${
+                    (userPlan?.emails_sent_today || 0) > 8 ? 'bg-red-500' : 
+                    (userPlan?.emails_sent_today || 0) > 6 ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}
+                  style={{ width: `${Math.min(((userPlan?.emails_sent_today || 0) / 10) * 100, 100)}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">{10 - (userPlan?.emails_sent_today || 0)} emails remaining today</p>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div 
-                className={`h-2 rounded-full transition-all ${
-                  (userPlan?.emails_sent_today || 0) > 8 ? 'bg-red-500' : 
-                  (userPlan?.emails_sent_today || 0) > 6 ? 'bg-yellow-500' : 'bg-green-500'
-                }`}
-                style={{ width: `${Math.min(((userPlan?.emails_sent_today || 0) / 10) * 100, 100)}%` }}
-              ></div>
+          )}
+
+          {/* Usage display for paid plans */}
+          {(userPlan?.plan === 'starter' || userPlan?.plan === 'growth' || userPlan?.plan === 'pro') && (
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-gray-300">Monthly Email Usage</span>
+                <span className="text-sm text-gray-400">
+                  {userPlan?.emails_sent_this_month || 0} / {userPlan?.plan === 'starter' ? '3,000' : userPlan?.plan === 'growth' ? '5,000' : '10,000'} emails
+                </span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className="h-2 rounded-full transition-all bg-gradient-to-r from-green-500 to-blue-500"
+                  style={{ 
+                    width: `${Math.min(((userPlan?.emails_sent_this_month || 0) / (userPlan?.plan === 'starter' ? 3000 : userPlan?.plan === 'growth' ? 5000 : 10000)) * 100, 100)}%` 
+                  }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {(userPlan?.plan === 'starter' ? 3000 : userPlan?.plan === 'growth' ? 5000 : 10000) - (userPlan?.emails_sent_this_month || 0)} emails remaining this month
+              </p>
             </div>
-            <p className="text-xs text-gray-500 mt-2">{10 - (userPlan?.emails_sent_today || 0)} emails remaining today</p>
-          </div>
+          )}
 
           <div className="border-t border-gray-700/50 pt-8">
             <h4 className="text-xl font-bold text-white mb-6 text-center">Upgrade Your Plan</h4>
