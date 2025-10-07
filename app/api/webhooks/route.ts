@@ -23,16 +23,22 @@ export async function POST(request: NextRequest): Promise<Response> {
 			console.log(`💰 Payment ${id} succeeded for ${user_id} with amount ${final_amount} ${currency}, plan: ${plan_id}`);
 			console.log('📊 Full payment data:', JSON.stringify(webhookData.data, null, 2));
 
+			// Use amount_after_fees as fallback if final_amount is missing
+			const amount = final_amount || amount_after_fees || 0;
+			const currencyCode = currency || 'USD';
+
 			// Update user subscription in background
-			if (user_id && final_amount && currency) {
+			if (user_id && plan_id) {
 				console.log('🚀 Processing payment success in background...');
 				waitUntil(
-					handlePaymentSuccess(user_id, plan_id, final_amount, currency, metadata)
+					handlePaymentSuccess(user_id, plan_id, amount, currencyCode, metadata)
 				);
 			} else {
 				console.error('❌ Missing required payment data:', {
 					user_id: !!user_id,
+					plan_id: !!plan_id,
 					final_amount: !!final_amount,
+					amount_after_fees: !!amount_after_fees,
 					currency: !!currency
 				});
 			}
@@ -144,14 +150,19 @@ async function handlePaymentSuccess(
 			planType = 'pro';
 		} else {
 			// If plan_id doesn't match any known plans, try to determine from amount
-			if (amount >= 50) {
-				planType = 'pro';
-			} else if (amount >= 25) {
-				planType = 'growth';
-			} else if (amount >= 10) {
-				planType = 'starter';
+			// Only use amount-based logic if we have a valid amount
+			if (amount > 0) {
+				if (amount >= 50) {
+					planType = 'pro';
+				} else if (amount >= 25) {
+					planType = 'growth';
+				} else if (amount >= 10) {
+					planType = 'starter';
+				}
+				console.log(`⚠️ Plan ID didn't match known plans, determined plan from amount: ${planType}`);
+			} else {
+				console.log(`⚠️ Plan ID didn't match known plans and no amount provided, defaulting to free plan`);
 			}
-			console.log(`⚠️ Plan ID didn't match known plans, determined plan from amount: ${planType}`);
 		}
 
 		console.log(`📝 Updating user ${user_id} to plan ${planType}`);

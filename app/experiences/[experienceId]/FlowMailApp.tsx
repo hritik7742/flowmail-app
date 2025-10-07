@@ -2491,9 +2491,9 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {filteredTemplates.map((template) => (
-            <div key={template.name} className="group relative bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 hover:from-white/10 hover:to-white/15 hover:border-gray-600/50 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-black/10">
+            <div key={template.name} className="group relative bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 hover:from-white/10 hover:to-white/15 hover:border-gray-600/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/10">
               {/* Icon */}
-              <div className={`w-10 h-10 bg-gradient-to-br ${template.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`w-10 h-10 bg-gradient-to-br ${template.color} rounded-lg flex items-center justify-center mb-3 transition-transform duration-300`}>
                 <template.icon className="w-5 h-5 text-white" />
               </div>
 
@@ -2526,12 +2526,19 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
               {/* Action Button */}
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
                   console.log('🎯 Use Template clicked for:', template.name)
-                  setSelectedTemplate(template)
-                  setCurrentPage('template-editor')
+                  
+                  // Add a small delay to ensure state updates properly
+                  setTimeout(() => {
+                    setSelectedTemplate(template)
+                    setCurrentPage('template-editor')
+                  }, 50)
                 }}
-                className="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-105 relative overflow-hidden group/btn"
+                className="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 relative overflow-hidden group/btn cursor-pointer"
+                type="button"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
                 <PaintBrushIcon className="w-3 h-3 mr-1.5 relative z-10" />
@@ -2935,8 +2942,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
       const templateName = selectedTemplate.name
       console.log('🎨 Updating preview for template:', templateName)
 
-      // Generate clean HTML without contenteditable
-      const html = selectedTemplate.html || ''
+      // Generate HTML using the template data
+      const html = getTemplateHTML(templateName, data)
       setPreviewHtml(html)
 
       // Extract editable content for visual editor
