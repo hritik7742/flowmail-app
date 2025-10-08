@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback, memo } from 'react'
 import { useIframeSdk } from '@whop/react'
+import { cn } from '../../../lib/utils'
 import {
   ChartBarIcon,
   UserGroupIcon,
@@ -29,7 +30,11 @@ import {
   SparklesIcon,
   RocketLaunchIcon,
   FireIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
+  SunIcon,
+  MoonIcon,
+  Bars3Icon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import {
   ChartBarIcon as ChartBarIconSolid,
@@ -96,11 +101,40 @@ function useSafeIframeSdk() {
 function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
   const iframeSdk = useSafeIframeSdk()
   const [currentPage, setCurrentPage] = useState('dashboard')
+  const [isDarkMode, setIsDarkMode] = useState(true) // Default to dark mode
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [stats, setStats] = useState({
     subscribers: 0,
     campaigns: 0,
     emailsSent: 0
   })
+
+  // Theme management
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode)
+  }
+
+  // Apply theme to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [isDarkMode])
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [loading, setLoading] = useState(false)
@@ -894,28 +928,28 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     if (!isOpen) return null
 
     return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Add New Member</h3>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-md mx-4 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="text-xl sm:text-2xl font-bold text-card-foreground">Add New Member</h3>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700/50 rounded-lg"
+              className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-accent rounded-lg"
             >
               <XCircleIcon className="w-6 h-6" />
             </button>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-card-foreground mb-2">
                 Full Name *
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-gray-700/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500/50 transition-all hover:border-gray-500/50"
+                className="w-full bg-background border border-input rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all hover:border-input/80"
                 placeholder="John Doe"
                 required
                 autoFocus
@@ -923,27 +957,27 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-card-foreground mb-2">
                 Email Address *
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-700/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500/50 transition-all hover:border-gray-500/50"
+                className="w-full bg-background border border-input rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all hover:border-input/80"
                 placeholder="john@example.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-card-foreground mb-2">
                 Tier
               </label>
               <select
                 value={tier}
                 onChange={(e) => setTier(e.target.value)}
-                className="w-full bg-gray-700/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500/50 transition-all hover:border-gray-500/50"
+                className="w-full bg-background border border-input rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all hover:border-input/80"
               >
                 <option value="basic">Basic</option>
                 <option value="pro">Pro</option>
@@ -953,17 +987,17 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 mt-8">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 sm:mt-8">
             <button
               onClick={handleClose}
-              className="px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white font-semibold rounded-xl transition-all duration-200 border border-gray-600/30 hover:border-gray-500/50"
+              className="px-6 py-3 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold rounded-xl transition-all duration-200 border border-border"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={isLoading || !name || !email}
-              className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-105"
+              className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {isLoading ? (
                 <>
@@ -995,49 +1029,49 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-border/30 rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 backdrop-blur-sm">
           <div className="text-center">
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transition-all duration-300 ${isCompleted
-              ? 'bg-gradient-to-br from-green-500 to-emerald-600 shadow-green-500/20'
+              ? 'bg-green-500'
               : isFailed
-                ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/20'
-                : 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/20'
+                ? 'bg-destructive'
+                : 'bg-primary'
               }`}>
               {isCompleted ? (
-                <CheckCircleIcon className="w-8 h-8 text-white" />
+                <CheckCircleIcon className="w-8 h-8 text-card-foreground" />
               ) : isFailed ? (
-                <XCircleIcon className="w-8 h-8 text-white" />
+                <XCircleIcon className="w-8 h-8 text-card-foreground" />
               ) : (
-                <PaperAirplaneIcon className={`w-8 h-8 text-white ${isSending ? 'animate-pulse' : ''}`} />
+                <PaperAirplaneIcon className={`w-8 h-8 text-card-foreground ${isSending ? 'animate-pulse' : ''}`} />
               )}
             </div>
 
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-4">
+            <h3 className="text-2xl font-bold text-card-foreground mb-4">
               {isCompleted ? 'Campaign Sent!' : isFailed ? 'Campaign Failed' : 'Sending Campaign'}
             </h3>
 
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-400">Progress</span>
-                <span className="text-sm text-white font-mono">
+                <span className="text-sm text-muted-foreground">Progress</span>
+                <span className="text-sm text-card-foreground font-mono">
                   {campaignProgress.current || 0} / {campaignProgress.total || 0} ({progressPercentage}%)
                 </span>
               </div>
 
-              <div className="w-full bg-gray-700/50 rounded-full h-4 border border-gray-600/30 overflow-hidden">
+              <div className="w-full bg-muted rounded-full h-4 border border-border overflow-hidden">
                 <div
                   className={`h-4 rounded-full transition-all duration-500 ease-out ${isCompleted
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                    ? 'bg-green-500'
                     : isFailed
-                      ? 'bg-gradient-to-r from-red-500 to-rose-600'
-                      : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                      ? 'bg-destructive'
+                      : 'bg-primary'
                     } ${isSending ? 'animate-pulse' : ''}`}
                   style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
 
               <div className="flex justify-between items-center mt-3 text-xs">
-                <span className="text-gray-500">
+                <span className="text-muted-foreground">
                   {isCompleted
                     ? '✅ All emails processed!'
                     : isFailed
@@ -1046,7 +1080,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                         ? '📧 Sending emails...'
                         : '⏳ Preparing...'}
                 </span>
-                <span className="text-gray-400 font-mono">
+                <span className="text-muted-foreground font-mono">
                   {campaignProgress.sent || 0}✅ {campaignProgress.failed || 0}❌
                 </span>
               </div>
@@ -1054,18 +1088,18 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
             {(isCompleted || isFailed) && (
               <div className="space-y-4">
-                <div className="bg-gray-800/50 rounded-xl p-4 space-y-2">
+                <div className="bg-muted/50 rounded-xl p-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Successfully Sent:</span>
-                    <span className="text-green-400 font-semibold">{campaignProgress.sent || 0}</span>
+                    <span className="text-muted-foreground">Successfully Sent:</span>
+                    <span className="text-green-500 font-semibold">{campaignProgress.sent || 0}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Failed:</span>
-                    <span className="text-red-400 font-semibold">{campaignProgress.failed || 0}</span>
+                    <span className="text-muted-foreground">Failed:</span>
+                    <span className="text-red-500 font-semibold">{campaignProgress.failed || 0}</span>
                   </div>
-                  <div className="flex justify-between text-sm border-t border-gray-700 pt-2">
-                    <span className="text-gray-300 font-medium">Total Processed:</span>
-                    <span className="text-white font-semibold">{campaignProgress.total || 0}</span>
+                  <div className="flex justify-between text-sm border-t border-border pt-2">
+                    <span className="text-card-foreground font-medium">Total Processed:</span>
+                    <span className="text-card-foreground font-semibold">{campaignProgress.total || 0}</span>
                   </div>
                 </div>
 
@@ -1077,8 +1111,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     loadDashboardData()
                   }}
                   className={`w-full font-bold py-3 px-6 rounded-xl transition-all duration-200 ${isCompleted
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
-                    : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white'
+                    ? 'bg-green-500 hover:bg-green-600 text-card-foreground'
+                    : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                     }`}
                 >
                   {isCompleted ? '🎉 Awesome! Close' : 'Close'}
@@ -1087,7 +1121,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             )}
 
             {isSending && (
-              <div className="text-xs text-gray-500 animate-pulse">
+              <div className="text-xs text-muted-foreground animate-pulse">
                 Please wait while we send your emails...
               </div>
             )}
@@ -1104,63 +1138,130 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     color?: string;
   }) => {
     return (
-      <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:bg-zinc-900/70 transition-all duration-200">
+      <div className={cn(
+        "bg-card border border-border rounded-xl transition-all duration-200",
+        isMobile ? "p-4 shadow-sm" : "p-4 sm:p-6 hover:bg-accent/50"
+      )}>
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <div className="text-sm font-medium text-zinc-400 mb-1">{title}</div>
-            <div className="text-2xl font-semibold text-white">{value}</div>
+            <div className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">{title}</div>
+            <div className="text-xl sm:text-2xl font-semibold text-card-foreground">{value}</div>
           </div>
-          <div className="p-2 rounded-lg bg-zinc-800/50">
-            <IconComponent className="w-5 h-5 text-zinc-400" />
+          <div className={cn(
+            "p-2 rounded-lg",
+            color === 'blue' ? 'bg-primary/20 text-primary' :
+            color === 'green' ? 'bg-green-500/20 text-green-500' :
+            color === 'purple' ? 'bg-purple-500/20 text-purple-500' :
+            'bg-orange-500/20 text-orange-500'
+          )}>
+            <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
       </div>
     )
   }
 
+  // Mobile Bottom Navigation Component
+  const MobileBottomNav = () => {
+    if (!isMobile) return null
+
+    const navItems = [
+      { name: 'Dashboard', key: 'dashboard', icon: ChartBarIcon },
+      { name: 'Campaigns', key: 'campaigns', icon: EnvelopeIcon },
+      { name: 'Subscribers', key: 'subscribers', icon: UserGroupIcon },
+      { name: 'Analytics', key: 'analytics', icon: ChartPieIcon },
+      { name: 'Settings', key: 'settings', icon: Cog6ToothIcon },
+    ]
+
+    return (
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 md:hidden">
+        <div className="flex items-center justify-around py-3">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => setCurrentPage(item.key)}
+              className={cn(
+                "flex items-center justify-center p-3 rounded-lg transition-all duration-200 min-w-0 flex-1",
+                currentPage === item.key
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+              )}
+              title={item.name}
+            >
+              <item.icon className="w-6 h-6" />
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   const Navbar = () => (
-    <div className="border-b border-zinc-800/50 mb-8 bg-black/20">
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between mb-6">
+    <div className={cn(
+      "border-b border-border bg-card/50 backdrop-blur-sm",
+      isMobile ? "mb-4" : "mb-4 sm:mb-8"
+    )}>
+      <div className="px-4 sm:px-6 py-4">
+        <div className={cn(
+          "flex items-center justify-between",
+          isMobile ? "mb-0" : "mb-4 sm:mb-6"
+        )}>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-              <EnvelopeIconSolid className="w-5 h-5 text-black" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center">
+              <EnvelopeIconSolid className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-white">FlowMail</h1>
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">FlowMail</h1>
             </div>
           </div>
-          <div className="relative profile-menu">
+          
+          {/* Desktop Navigation */}
+          <div className="hidden sm:flex items-center space-x-3">
+            {/* Theme Toggle Button */}
             <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center space-x-3 hover:bg-zinc-800/50 rounded-lg px-3 py-2 transition-all duration-200"
+              onClick={toggleTheme}
+              className="p-2 hover:bg-accent rounded-lg transition-all duration-200 group"
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              <div className="w-8 h-8 bg-zinc-700 rounded-lg flex items-center justify-center">
-                <span className="text-sm font-medium text-white">{user.name.charAt(0).toUpperCase()}</span>
+              {isDarkMode ? (
+                <SunIcon className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <MoonIcon className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </button>
+            
+            {/* Profile Menu */}
+            <div className="relative profile-menu">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-3 hover:bg-accent rounded-lg px-3 py-2 transition-all duration-200"
+              >
+              <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
+                <span className="text-sm font-medium text-secondary-foreground">{user.name.charAt(0).toUpperCase()}</span>
               </div>
-              <span className="text-sm font-medium text-zinc-300">{user.email}</span>
-              <ChevronDownIcon className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
+              <span className="text-sm font-medium text-muted-foreground hidden lg:inline">{user.email}</span>
+              <ChevronDownIcon className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
 
             {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50 backdrop-blur-sm">
+              <div className="absolute right-0 mt-2 w-56 bg-popover border border-border rounded-lg shadow-2xl z-50 backdrop-blur-sm">
                 <div className="py-1">
-                  <div className="px-3 py-2 border-b border-zinc-800">
-                    <div className="text-sm font-medium text-white">{user.name}</div>
-                    <div className="text-xs text-zinc-400">{user.email}</div>
+                  <div className="px-3 py-2 border-b border-border">
+                    <div className="text-sm font-medium text-popover-foreground">{user.name}</div>
+                    <div className="text-xs text-muted-foreground">{user.email}</div>
                   </div>
                   
                   {/* Plan Status */}
-                  <div className="px-3 py-2 border-b border-zinc-800">
+                  <div className="px-3 py-2 border-b border-border">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-popover-foreground">
                           {userPlan?.plan === 'free' ? 'Free Plan' : 
                            userPlan?.plan === 'starter' ? 'Starter Plan' :
                            userPlan?.plan === 'growth' ? 'Growth Plan' : 
                            userPlan?.plan === 'pro' ? 'Pro Plan' : 'Free Plan'}
                         </div>
-                        <div className="text-xs text-zinc-400">
+                        <div className="text-xs text-muted-foreground">
                           {userPlan?.plan === 'free' ? '10 emails/day' : 
                            userPlan?.plan === 'starter' ? '3,000 emails/month' :
                            userPlan?.plan === 'growth' ? '5,000 emails/month' : 
@@ -1168,10 +1269,10 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                         </div>
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        userPlan?.plan === 'free' ? 'bg-gray-700 text-gray-300' :
-                        userPlan?.plan === 'starter' ? 'bg-green-600 text-white' :
-                        userPlan?.plan === 'growth' ? 'bg-blue-600 text-white' :
-                        'bg-purple-600 text-white'
+                        userPlan?.plan === 'free' ? 'bg-muted text-muted-foreground' :
+                        userPlan?.plan === 'starter' ? 'bg-primary text-primary-foreground' :
+                        userPlan?.plan === 'growth' ? 'bg-secondary text-secondary-foreground' :
+                        'bg-accent text-accent-foreground'
                       }`}>
                         {userPlan?.plan === 'free' ? 'FREE' : 
                          userPlan?.plan === 'starter' ? 'STARTER' :
@@ -1183,13 +1284,13 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     {/* Usage indicator for free plan */}
                     {userPlan?.plan === 'free' && (
                       <div className="mt-2">
-                        <div className="flex justify-between text-xs text-zinc-400 mb-1">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
                           <span>Today's usage</span>
                           <span>{userPlan?.emails_sent_today || 0}/10</span>
                         </div>
-                        <div className="w-full bg-zinc-800 rounded-full h-1">
+                        <div className="w-full bg-muted rounded-full h-1">
                           <div 
-                            className="h-1 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                            className="h-1 rounded-full bg-gradient-to-r from-primary to-secondary"
                             style={{ width: `${Math.min(((userPlan?.emails_sent_today || 0) / 10) * 100, 100)}%` }}
                           ></div>
                         </div>
@@ -1199,13 +1300,13 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     {/* Usage indicator for paid plans */}
                     {(userPlan?.plan === 'growth' || userPlan?.plan === 'pro') && (
                       <div className="mt-2">
-                        <div className="flex justify-between text-xs text-zinc-400 mb-1">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
                           <span>Monthly usage</span>
                           <span>{userPlan?.emails_sent_this_month || 0}/{userPlan?.plan === 'growth' ? '5,000' : '10,000'}</span>
                         </div>
-                        <div className="w-full bg-zinc-800 rounded-full h-1">
+                        <div className="w-full bg-muted rounded-full h-1">
                           <div 
-                            className="h-1 rounded-full bg-gradient-to-r from-green-500 to-blue-500"
+                            className="h-1 rounded-full bg-gradient-to-r from-primary to-secondary"
                             style={{ 
                               width: `${Math.min(((userPlan?.emails_sent_this_month || 0) / (userPlan?.plan === 'growth' ? 5000 : 10000)) * 100, 100)}%` 
                             }}
@@ -1221,7 +1322,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                       setShowProfileMenu(false)
                       setCurrentPage('settings')
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800/50 flex items-center transition-colors duration-200"
+                    className="w-full text-left px-3 py-2 text-sm text-popover-foreground hover:bg-accent flex items-center transition-colors duration-200"
                   >
                     <Cog6ToothIcon className="w-4 h-4 mr-2" />
                     Settings
@@ -1229,10 +1330,95 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 </div>
               </div>
             )}
+            </div>
+          </div>
+          
+          {/* Mobile Navigation */}
+          <div className="flex sm:hidden items-center space-x-2">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 hover:bg-accent rounded-lg transition-all duration-200 group"
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? (
+                <SunIcon className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <MoonIcon className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </button>
+            
+            {/* Profile Menu */}
+            <div className="relative profile-menu">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-2 hover:bg-accent rounded-lg px-2 py-1 transition-all duration-200"
+              >
+                <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-medium text-secondary-foreground">{user.name.charAt(0).toUpperCase()}</span>
+                </div>
+                <ChevronDownIcon className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-popover border border-border rounded-lg shadow-2xl z-50 backdrop-blur-sm">
+                  <div className="py-1">
+                    <div className="px-3 py-2 border-b border-border">
+                      <div className="text-sm font-medium text-popover-foreground">{user.name}</div>
+                      <div className="text-xs text-muted-foreground">{user.email}</div>
+                    </div>
+                    
+                    {/* Plan Status */}
+                    <div className="px-3 py-2 border-b border-border">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-popover-foreground">
+                            {userPlan?.plan === 'free' ? 'Free Plan' : 
+                             userPlan?.plan === 'starter' ? 'Starter Plan' :
+                             userPlan?.plan === 'growth' ? 'Growth Plan' : 
+                             userPlan?.plan === 'pro' ? 'Pro Plan' : 'Free Plan'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {userPlan?.plan === 'free' ? '10 emails/day' : 
+                             userPlan?.plan === 'starter' ? '3,000 emails/month' :
+                             userPlan?.plan === 'growth' ? '5,000 emails/month' : 
+                             userPlan?.plan === 'pro' ? '10,000 emails/month' : '10 emails/day'}
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          userPlan?.plan === 'free' ? 'bg-muted text-muted-foreground' :
+                          userPlan?.plan === 'starter' ? 'bg-primary text-primary-foreground' :
+                          userPlan?.plan === 'growth' ? 'bg-secondary text-secondary-foreground' :
+                          'bg-accent text-accent-foreground'
+                        }`}>
+                          {userPlan?.plan === 'free' ? 'FREE' : 
+                           userPlan?.plan === 'starter' ? 'STARTER' :
+                           userPlan?.plan === 'growth' ? 'GROWTH' : 
+                           userPlan?.plan === 'pro' ? 'PRO' : 'FREE'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Settings Link */}
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false)
+                        setCurrentPage('settings')
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-popover-foreground hover:bg-accent flex items-center transition-colors duration-200"
+                    >
+                      <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                      Settings
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex space-x-1">
+        {/* Desktop Navigation */}
+        <div className="hidden sm:flex space-x-1">
           {[
             { name: 'Dashboard', key: 'dashboard', icon: ChartBarIcon },
             { name: 'Campaigns', key: 'campaigns', icon: EnvelopeIcon },
@@ -1245,10 +1431,12 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <button
               key={item.key}
               onClick={() => setCurrentPage(item.key)}
-              className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentPage === item.key
-                ? 'bg-zinc-800 text-white'
-                : 'text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50'
-                }`}
+              className={cn(
+                "inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                currentPage === item.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+              )}
             >
               <item.icon className="w-4 h-4 mr-2" />
               {item.name}
@@ -1259,63 +1447,69 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     </div>
   )
   const DashboardPage = () => (
-    <div className="space-y-8">
+    <div className={cn(
+      "space-y-6",
+      isMobile ? "space-y-4" : "sm:space-y-8"
+    )}>
       <div>
-        <h1 className="text-3xl font-semibold text-white mb-2">Dashboard</h1>
-        <p className="text-zinc-400">Overview of your email program.</p>
+        <h1 className={cn(
+          "font-semibold text-foreground mb-2",
+          isMobile ? "text-xl" : "text-2xl sm:text-3xl"
+        )}>Dashboard</h1>
+        <p className="text-muted-foreground">Overview of your email program.</p>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <button
             onClick={loadDashboardData}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-blue-500/25 disabled:opacity-50"
+            className="inline-flex items-center justify-center px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50"
           >
             <ArrowPathIcon className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Refreshing...' : 'Refresh Stats'}
           </button>
 
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-muted-foreground">
             Last updated: {new Date().toLocaleTimeString()}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <StatCard title="Total Subscribers" value={stats.subscribers.toLocaleString()} icon={UserGroupIcon} />
         <StatCard title="Campaigns Sent" value={stats.campaigns} icon={EnvelopeIcon} />
         <StatCard title="Emails Sent" value={stats.emailsSent.toLocaleString()} icon={PaperAirplaneIcon} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center mb-6">
-            <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center mr-3">
-              <BoltIcon className="w-5 h-5 text-zinc-400" />
+            <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center mr-3">
+              <BoltIcon className="w-5 h-5 text-secondary-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-white">Recent Campaigns</h3>
+            <h3 className="text-lg font-medium text-card-foreground">Recent Campaigns</h3>
           </div>
-          <p className="text-sm text-zinc-400 mb-4">Latest activity and performance.</p>
+          <p className="text-sm text-muted-foreground mb-4">Latest activity and performance.</p>
           <div className="space-y-3">
             {campaigns.slice(0, 5).map((campaign) => (
-              <div key={campaign.id} className="flex items-center justify-between py-3 border-b border-zinc-800/50 last:border-b-0">
+              <div key={campaign.id} className="flex items-center justify-between py-3 border-b border-border last:border-b-0">
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-white truncate">{campaign.name}</div>
-                  <div className="text-xs text-zinc-400">{campaign.subject}</div>
+                  <div className="text-sm font-medium text-card-foreground truncate">{campaign.name}</div>
+                  <div className="text-xs text-muted-foreground">{campaign.subject}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-medium text-white">{campaign.total_recipients}</div>
-                  <div className="text-xs text-zinc-400">recipients</div>
+                  <div className="text-sm font-medium text-card-foreground">{campaign.total_recipients}</div>
+                  <div className="text-xs text-muted-foreground">recipients</div>
                 </div>
               </div>
             ))}
             {campaigns.length === 0 && (
               <div className="text-center py-8">
-                <div className="text-zinc-500 text-sm">No campaigns yet</div>
+                <div className="text-muted-foreground text-sm">No campaigns yet</div>
                 <button
                   onClick={() => setCurrentPage('campaigns')}
-                  className="mt-3 text-sm text-blue-400 hover:text-blue-300"
+                  className="mt-3 text-sm text-primary hover:text-primary/80"
                 >
                   Create your first campaign
                 </button>
@@ -1324,44 +1518,44 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-gray-800/40 to-gray-900/60 backdrop-blur-sm border border-gray-700/30 rounded-2xl p-6 hover:from-gray-800/60 hover:to-gray-900/80 transition-all duration-300">
+        <div className="bg-card border border-border rounded-2xl p-6 hover:bg-accent/50 transition-all duration-300">
           <div className="flex items-center mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-blue-500/20">
-              <RocketLaunchIcon className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mr-4 shadow-lg">
+              <RocketLaunchIcon className="w-6 h-6 text-primary-foreground" />
             </div>
-            <h3 className="text-xl font-semibold text-white">Quick Actions</h3>
+            <h3 className="text-xl font-semibold text-card-foreground">Quick Actions</h3>
           </div>
           <div className="space-y-3">
-            <div className="text-sm text-gray-400 mb-4">
+            <div className="text-sm text-muted-foreground mb-4">
               Get started with your email campaigns
             </div>
             <div className="space-y-3">
               <button
                 onClick={() => setCurrentPage('campaigns')}
-                className="w-full text-left bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-400/50 text-white text-sm py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-between group shadow-lg shadow-green-500/10"
+                className="w-full text-left bg-secondary hover:bg-secondary/80 border border-border text-secondary-foreground text-sm py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-between group"
               >
                 <span>Create New Campaign</span>
                 <div className="flex items-center ml-2">
-                  <PlusIcon className="w-4 h-4 text-green-400 group-hover:scale-110 transition-transform duration-200" />
+                  <PlusIcon className="w-4 h-4 text-secondary-foreground group-hover:scale-110 transition-transform duration-200" />
                 </div>
               </button>
               <button
                 onClick={() => setCurrentPage('subscribers')}
-                className="w-full text-left bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 text-white text-sm py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-between group shadow-lg shadow-blue-500/10"
+                className="w-full text-left bg-accent hover:bg-accent/80 border border-border text-accent-foreground text-sm py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-between group"
               >
                 <span>Manage Subscribers</span>
                 <div className="flex items-center ml-2">
-                  <UserGroupIcon className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform duration-200" />
+                  <UserGroupIcon className="w-4 h-4 text-accent-foreground group-hover:scale-110 transition-transform duration-200" />
                 </div>
               </button>
               <button
                 onClick={syncMembers}
                 disabled={loading}
-                className="w-full text-left bg-gradient-to-r from-purple-500/20 to-violet-500/20 border border-purple-500/30 hover:from-purple-500/30 hover:to-violet-500/30 hover:border-purple-400/50 text-white text-sm py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-between group shadow-lg shadow-purple-500/10 disabled:opacity-50"
+                className="w-full text-left bg-primary hover:bg-primary/80 border border-border text-primary-foreground text-sm py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-between group disabled:opacity-50"
               >
                 <span>{loading ? 'Syncing...' : 'Sync Whop Members'}</span>
                 <div className="flex items-center ml-2">
-                  <ArrowPathIcon className={`w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform duration-200 ${loading ? 'animate-spin' : ''}`} />
+                  <ArrowPathIcon className={`w-4 h-4 text-primary-foreground group-hover:scale-110 transition-transform duration-200 ${loading ? 'animate-spin' : ''}`} />
                 </div>
               </button>
             </div>
@@ -1371,13 +1565,19 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     </div>
   )
   const CampaignsPage = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className={cn(
+      "space-y-4",
+      isMobile ? "space-y-4" : "sm:space-y-6"
+    )}>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Campaigns</h2>
-          <p className="text-gray-400 mt-1">Create and manage your email campaigns</p>
+          <h2 className={cn(
+            "font-semibold text-foreground",
+            isMobile ? "text-lg" : "text-xl sm:text-2xl"
+          )}>Campaigns</h2>
+          <p className="text-muted-foreground mt-1">Create and manage your email campaigns</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           {showDeleteMode ? (
             <>
               <button
@@ -1385,7 +1585,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   setShowDeleteMode(false)
                   setSelectedCampaigns(new Set())
                 }}
-                className="inline-flex items-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-xl transition-all duration-200"
+                className="inline-flex items-center px-6 py-3 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold rounded-xl transition-all duration-200"
               >
                 <XCircleIcon className="w-5 h-5 mr-2" />
                 Cancel
@@ -1393,7 +1593,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               <button
                 onClick={handleDeleteSelected}
                 disabled={selectedCampaigns.size === 0 || deletingCampaigns}
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105"
+                className="inline-flex items-center px-6 py-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {deletingCampaigns ? (
                   <>
@@ -1413,7 +1613,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               {campaigns.length > 0 && (
                 <button
                   onClick={() => setShowDeleteMode(true)}
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105"
+                  className="inline-flex items-center px-6 py-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg"
                 >
                   <TrashIcon className="w-5 h-5 mr-2" />
                   Delete Campaigns
@@ -1421,7 +1621,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               )}
               <button
                 onClick={() => setCurrentPage('create-campaign')}
-                className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 relative overflow-hidden group"
+                className="inline-flex items-center px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl transition-all duration-300 shadow-lg hover:scale-105 relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                 <PlusIcon className="w-5 h-5 mr-2 relative z-10" />
@@ -1433,16 +1633,16 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
       </div>
 
       {campaigns.length > 0 ? (
-        <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-700/50">
-            <h3 className="text-xl font-semibold text-white">All Campaigns</h3>
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="px-4 sm:px-6 py-4 border-b border-border">
+            <h3 className="text-lg sm:text-xl font-semibold text-card-foreground">All Campaigns</h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-800/30">
+            <table className="w-full min-w-[600px]">
+              <thead className="bg-muted/50">
                 <tr>
                   {showDeleteMode && (
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       <input
                         type="checkbox"
                         checked={selectedCampaigns.size === campaigns.length && campaigns.length > 0}
@@ -1453,69 +1653,69 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                             setSelectedCampaigns(new Set())
                           }
                         }}
-                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                        className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                       />
                     </th>
                   )}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Campaign</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Recipients</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Sent Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaign</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Recipients</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Sent Date</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700">
+              <tbody className="divide-y divide-border">
                 {campaigns.map((campaign) => (
-                  <tr key={campaign.id} className="hover:bg-gray-800/30">
+                  <tr key={campaign.id} className="hover:bg-accent/50">
                     {showDeleteMode && (
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedCampaigns.has(campaign.id)}
                           onChange={() => toggleCampaignSelection(campaign.id)}
-                          className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                          className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                         />
                       </td>
                     )}
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <div>
                         <button
                           onClick={() => handleEditCampaign(campaign)}
                           className={`text-sm font-medium transition-colors cursor-pointer text-left flex items-center ${campaign.status === 'sent'
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-white hover:text-blue-400'
+                            ? 'text-muted-foreground cursor-not-allowed'
+                            : 'text-card-foreground hover:text-primary'
                             }`}
                           disabled={campaign.status === 'sent'}
                         >
                           {campaign.name}
                           {campaign.status !== 'sent' && (
-                            <span className="ml-2 text-xs text-blue-400">✏️</span>
+                            <span className="ml-2 text-xs text-primary">✏️</span>
                           )}
                         </button>
-                        <div className="text-sm text-gray-400">{campaign.subject}</div>
+                        <div className="text-sm text-muted-foreground">{campaign.subject}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${campaign.status === 'sent'
                         ? 'bg-green-500/20 text-green-400'
                         : campaign.status === 'draft'
-                          ? 'bg-gray-500/20 text-gray-400'
-                          : 'bg-blue-500/20 text-blue-400'
+                          ? 'bg-muted/20 text-muted-foreground'
+                          : 'bg-primary/20 text-primary'
                         }`}>
                         {campaign.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-card-foreground">
                       {campaign.total_recipients || 0}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString() : 'Not sent'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-2">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <button
                           onClick={() => sendTestEmail(campaign.id, campaign.name)}
-                          className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-xs font-semibold rounded-lg transition-all duration-200 hover:scale-105 shadow-md shadow-blue-500/25"
+                          className="inline-flex items-center justify-center px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg transition-all duration-200 shadow-md"
                         >
                           <PaperAirplaneIcon className="w-3 h-3 mr-1" />
                           Send Test
@@ -1524,7 +1724,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                           <button
                             onClick={() => sendCampaign(campaign.id, campaign.name)}
                             disabled={sendingCampaign === campaign.id}
-                            className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white text-xs font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md shadow-red-500/30 relative overflow-hidden group"
+                            className="inline-flex items-center justify-center px-3 py-1.5 bg-accent hover:bg-accent/90 text-accent-foreground text-xs font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md relative overflow-hidden group"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
                             {sendingCampaign === campaign.id ? (
@@ -1552,21 +1752,21 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8">
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
-              <EnvelopeIcon className="w-10 h-10 text-blue-400" />
+              <EnvelopeIcon className="w-10 h-10 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-3">No campaigns yet</h3>
-            <p className="text-gray-400 mb-8 max-w-sm mx-auto">Get started by creating your first email campaign to engage with your community</p>
+            <h3 className="text-xl font-semibold text-card-foreground mb-3">No campaigns yet</h3>
+            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Get started by creating your first email campaign to engage with your community</p>
             <div className="space-y-4">
               <button
                 onClick={() => setCurrentPage('create-campaign')}
-                className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
+                className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-card-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
               >
                 <PlusIcon className="w-5 h-5 mr-2" />
                 Create Your First Campaign
               </button>
               <button
                 onClick={() => createSampleCampaign()}
-                className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105"
+                className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-card-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105"
               >
                 <BeakerIcon className="w-5 h-5 mr-2" />
                 Create Sample Campaign (for testing)
@@ -1578,23 +1778,29 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     </div>
   )
   const SubscribersPage = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className={cn(
+      "space-y-4",
+      isMobile ? "space-y-4" : "sm:space-y-6"
+    )}>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Subscribers</h2>
-          <p className="text-gray-400 mt-1">Manage your community members and audience</p>
+          <h2 className={cn(
+            "font-semibold text-card-foreground",
+            isMobile ? "text-lg" : "text-xl sm:text-2xl"
+          )}>Subscribers</h2>
+          <p className="text-muted-foreground mt-1">Manage your community members and audience</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => setShowAddMemberModal(true)}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:scale-105"
+            className="inline-flex items-center justify-center px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg"
           >
             <PlusIcon className="w-5 h-5 mr-2" />
             Add Member
           </button>
           <button
             onClick={() => setShowUploadModal(true)}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
+            className="inline-flex items-center justify-center px-6 py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg"
           >
             <DocumentTextIcon className="w-5 h-5 mr-2" />
             Upload CSV
@@ -1602,7 +1808,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
           <button
             onClick={syncMembers}
             disabled={loading}
-            className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 hover:from-cyan-600 hover:via-blue-600 hover:to-indigo-600 text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105 relative overflow-hidden group"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg relative overflow-hidden group"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             {loading ? (
@@ -1615,7 +1821,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
           <button
             onClick={clearAllData}
             disabled={loading}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-card-foreground font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105"
           >
             <TrashIcon className="w-5 h-5 mr-2" />
             Clear All Data
@@ -1627,18 +1833,18 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-400 mb-1">Total Subscribers</div>
-              <div className="text-2xl font-bold text-white">{subscribers.length}</div>
+              <div className="text-sm text-muted-foreground mb-1">Total Subscribers</div>
+              <div className="text-2xl font-bold text-card-foreground">{subscribers.length}</div>
             </div>
-            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-              <UserGroupIcon className="w-6 h-6 text-blue-400" />
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl">
+              <UserGroupIcon className="w-6 h-6 text-primary" />
             </div>
           </div>
         </div>
         <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-400 mb-1">Active Members</div>
+              <div className="text-sm text-muted-foreground mb-1">Active Members</div>
               <div className="text-2xl font-bold text-green-400">
                 {subscribers.filter(s => s.status === 'active').length}
               </div>
@@ -1651,7 +1857,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-400 mb-1">VIP Members</div>
+              <div className="text-sm text-muted-foreground mb-1">VIP Members</div>
               <div className="text-2xl font-bold text-purple-400">
                 {subscribers.filter(s => s.tier === 'VIP').length}
               </div>
@@ -1666,17 +1872,17 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
       {subscribers.length > 0 ? (
         <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-700/50">
-            <h3 className="text-xl font-semibold text-white">All Subscribers</h3>
+            <h3 className="text-xl font-semibold text-card-foreground">All Subscribers</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-800/30">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Member</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Tier</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Synced</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Member</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tier</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Synced</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
@@ -1684,16 +1890,16 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   <tr key={subscriber.id || index} className="hover:bg-gray-800/30">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-white">{subscriber.name}</div>
-                        <div className="text-sm text-gray-400">{subscriber.email}</div>
+                        <div className="text-sm font-medium text-card-foreground">{subscriber.name}</div>
+                        <div className="text-sm text-muted-foreground">{subscriber.email}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${subscriber.tier === 'VIP'
                         ? 'bg-purple-500/20 text-purple-400'
                         : subscriber.tier === 'Pro'
-                          ? 'bg-blue-500/20 text-blue-400'
-                          : 'bg-gray-500/20 text-gray-400'
+                          ? 'bg-primary/20 text-primary'
+                          : 'bg-muted/20 text-muted-foreground'
                         }`}>
                         {subscriber.tier || 'Basic'}
                       </span>
@@ -1706,14 +1912,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                         {subscriber.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {subscriber.synced_at ? new Date(subscriber.synced_at).toLocaleDateString() : 'Never'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
                         onClick={() => deleteMember(subscriber.id, subscriber.name)}
                         disabled={deletingMember === subscriber.id}
-                        className="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                        className="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-card-foreground text-xs font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
                       >
                         {deletingMember === subscriber.id ? (
                           <>
@@ -1738,14 +1944,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8">
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
-              <UserGroupIcon className="w-10 h-10 text-blue-400" />
+              <UserGroupIcon className="w-10 h-10 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-3">No subscribers yet</h3>
-            <p className="text-gray-400 mb-8 max-w-sm mx-auto">Import your Whop community members to start building your email list</p>
+            <h3 className="text-xl font-semibold text-card-foreground mb-3">No subscribers yet</h3>
+            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Import your Whop community members to start building your email list</p>
             <button
               onClick={syncMembers}
               disabled={loading}
-              className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105"
+              className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-card-foreground font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105"
             >
               {loading ? (
                 <>
@@ -1796,13 +2002,13 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
           }
 
           return (
-            <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-              <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-card border border-border rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-white">Add New Member</h3>
+                  <h3 className="text-2xl font-bold text-card-foreground">Add New Member</h3>
                   <button
                     onClick={handleClose}
-                    className="text-gray-400 hover:text-white transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <XCircleIcon className="w-6 h-6" />
                   </button>
@@ -1810,14 +2016,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    <label className="block text-sm font-semibold text-card-foreground mb-2">
                       Full Name *
                     </label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full bg-background border border-input rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                       placeholder="John Doe"
                       required
                       autoFocus
@@ -1825,27 +2031,27 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    <label className="block text-sm font-semibold text-card-foreground mb-2">
                       Email Address *
                     </label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full bg-background border border-input rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                       placeholder="john@example.com"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    <label className="block text-sm font-semibold text-card-foreground mb-2">
                       Tier
                     </label>
                     <select
                       value={tier}
                       onChange={(e) => setTier(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full bg-background border border-input rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                     >
                       <option value="basic">Basic</option>
                       <option value="pro">Pro</option>
@@ -1858,14 +2064,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 <div className="flex justify-end space-x-3 mt-8">
                   <button
                     onClick={handleClose}
-                    className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white font-semibold rounded-xl transition-all duration-200"
+                    className="px-6 py-3 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold rounded-xl transition-all duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting || !name || !email}
-                    className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                    className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                   >
                     {isSubmitting ? (
                       <>
@@ -1890,23 +2096,23 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
       {/* Upload CSV Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-white">Upload Subscribers</h3>
+              <h3 className="text-2xl font-bold text-card-foreground">Upload Subscribers</h3>
               <button
                 onClick={() => setShowUploadModal(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <XCircleIcon className="w-6 h-6" />
               </button>
             </div>
 
             <div className="space-y-5">
-              <div className="p-5 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                <h4 className="text-sm font-bold text-blue-400 mb-2">📋 CSV Format Required</h4>
-                <p className="text-sm text-blue-300 mb-3">Your CSV file should have these columns:</p>
-                <div className="text-xs text-blue-200 font-mono bg-gray-800 p-3 rounded-lg border border-gray-700">
+              <div className="p-5 bg-primary/10 border border-primary/30 rounded-xl">
+                <h4 className="text-sm font-bold text-primary mb-2">📋 CSV Format Required</h4>
+                <p className="text-sm text-primary mb-3">Your CSV file should have these columns:</p>
+                <div className="text-xs text-muted-foreground font-mono bg-muted p-3 rounded-lg border border-border">
                   name,email,tier<br />
                   John Doe,john@example.com,premium<br />
                   Jane Smith,jane@example.com,basic
@@ -1914,19 +2120,19 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-card-foreground mb-2">
                   Select CSV File
                 </label>
                 <input
                   type="file"
                   accept=".csv,.txt"
                   onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-purple-600 file:text-white hover:file:bg-purple-700 file:cursor-pointer"
+                  className="w-full bg-background border border-input rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer"
                 />
               </div>
 
               {uploadFile && (
-                <div className="text-sm text-green-400 bg-green-500/10 border border-green-500/30 p-3 rounded-lg">
+                <div className="text-sm text-green-500 bg-green-500/10 border border-green-500/30 p-3 rounded-lg">
                   ✅ Selected: <strong>{uploadFile.name}</strong> ({(uploadFile.size / 1024).toFixed(1)} KB)
                 </div>
               )}
@@ -1935,7 +2141,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <div className="flex justify-between items-center mt-8">
               <button
                 onClick={downloadSample}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 flex items-center shadow-lg hover:shadow-xl"
+                className="px-6 py-3 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold rounded-xl transition-all duration-200 flex items-center shadow-lg hover:shadow-xl"
               >
                 <DocumentTextIcon className="w-4 h-4 mr-2" />
                 Download Template
@@ -1944,14 +2150,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowUploadModal(false)}
-                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white font-semibold rounded-xl transition-all duration-200"
+                  className="px-6 py-3 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold rounded-xl transition-all duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleFileUpload}
                   disabled={uploading || !uploadFile}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                 >
                   {uploading ? (
                     <>
@@ -2054,28 +2260,28 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setCurrentPage('campaigns')}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-card-foreground"
           >
             ← Back to Campaigns
           </button>
           <div>
-            <h2 className="text-2xl font-semibold text-white">Create Campaign</h2>
-            <p className="text-gray-400 mt-1">Design and send your email campaign</p>
+            <h2 className="text-2xl font-semibold text-card-foreground">Create Campaign</h2>
+            <p className="text-muted-foreground mt-1">Design and send your email campaign</p>
           </div>
         </div>
 
         {loadingTemplate && (
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+          <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-3"></div>
-              <span className="text-blue-400 text-sm">Loading template...</span>
+              <span className="text-primary text-sm">Loading template...</span>
             </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Campaign Details</h3>
+            <h3 className="text-lg font-semibold text-card-foreground mb-4">Campaign Details</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -2086,7 +2292,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Weekly Newsletter #13"
                   required
                 />
@@ -2099,7 +2305,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 <select
                   value={formData.segment}
                   onChange={(e) => setFormData({ ...formData, segment: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Members</option>
                   <option value="active">Active Members Only</option>
@@ -2116,7 +2322,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 type="text"
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., This week's exclusive updates"
                 required
               />
@@ -2130,17 +2336,17 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 type="text"
                 value={formData.preview_text}
                 onChange={(e) => setFormData({ ...formData, preview_text: e.target.value })}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Text that appears in email preview"
               />
             </div>
           </div>
 
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Email Content</h3>
+            <h3 className="text-lg font-semibold text-card-foreground mb-4">Email Content</h3>
 
             <div className="mb-4">
-              <div className="text-sm text-gray-400 mb-2">
+              <div className="text-sm text-muted-foreground mb-2">
                 Available merge tags: {`{{name}}`}, {`{{email}}`}, {`{{tier}}`}
               </div>
             </div>
@@ -2149,14 +2355,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               value={formData.html_content}
               onChange={(e) => setFormData({ ...formData, html_content: e.target.value })}
               rows={15}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Write your email content here... You can use HTML tags for formatting."
               required
             />
 
-            <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-400 mb-2">💡 Pro Tips:</h4>
-              <ul className="text-sm text-blue-300 space-y-1">
+            <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+              <h4 className="text-sm font-medium text-primary mb-2">💡 Pro Tips:</h4>
+              <ul className="text-sm text-primary space-y-1">
                 <li>• Use {`{{name}}`} to personalize emails</li>
                 <li>• Keep subject lines under 50 characters</li>
                 <li>• Include a clear call-to-action</li>
@@ -2169,7 +2375,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <button
               type="button"
               onClick={() => setCurrentPage('campaigns')}
-              className="inline-flex items-center px-6 py-3 bg-white/5 border border-gray-600/50 hover:bg-white/10 hover:border-gray-500/50 text-gray-200 font-semibold rounded-xl transition-all duration-200"
+              className="inline-flex items-center px-6 py-3 bg-white/5 border border-border/50 hover:bg-white/10 hover:border-gray-500/50 text-gray-200 font-semibold rounded-xl transition-all duration-200"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-2" />
               Cancel
@@ -2177,7 +2383,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <button
               type="submit"
               disabled={sending || !formData.name || !formData.subject || !formData.html_content}
-              className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 relative overflow-hidden group"
+              className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-card-foreground font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               {sending ? (
@@ -2230,19 +2436,19 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               setEditingCampaign(null)
               setCurrentPage('campaigns')
             }}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-card-foreground"
           >
             ← Back to Campaigns
           </button>
           <div>
-            <h2 className="text-2xl font-semibold text-white">Edit Campaign</h2>
-            <p className="text-gray-400 mt-1">Update your email campaign details</p>
+            <h2 className="text-2xl font-semibold text-card-foreground">Edit Campaign</h2>
+            <p className="text-muted-foreground mt-1">Update your email campaign details</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Campaign Details</h3>
+            <h3 className="text-lg font-semibold text-card-foreground mb-4">Campaign Details</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -2253,7 +2459,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Weekly Newsletter #13"
                   required
                 />
@@ -2263,7 +2469,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Status
                 </label>
-                <div className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400">
+                <div className="px-3 py-2 bg-background border border-border rounded-lg text-muted-foreground">
                   {editingCampaign?.status || 'draft'}
                 </div>
               </div>
@@ -2277,7 +2483,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 type="text"
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., This week's exclusive updates"
                 required
               />
@@ -2291,17 +2497,17 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 type="text"
                 value={formData.preview_text}
                 onChange={(e) => setFormData({ ...formData, preview_text: e.target.value })}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Text that appears in email preview"
               />
             </div>
           </div>
 
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Email Content</h3>
+            <h3 className="text-lg font-semibold text-card-foreground mb-4">Email Content</h3>
 
             <div className="mb-4">
-              <div className="text-sm text-gray-400 mb-2">
+              <div className="text-sm text-muted-foreground mb-2">
                 Available merge tags: {`{{name}}`}, {`{{email}}`}, {`{{tier}}`}
               </div>
             </div>
@@ -2310,14 +2516,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               value={formData.html_content}
               onChange={(e) => setFormData({ ...formData, html_content: e.target.value })}
               rows={15}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Write your email content here... You can use HTML tags for formatting."
               required
             />
 
-            <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-400 mb-2">💡 Pro Tips:</h4>
-              <ul className="text-sm text-blue-300 space-y-1">
+            <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+              <h4 className="text-sm font-medium text-primary mb-2">💡 Pro Tips:</h4>
+              <ul className="text-sm text-primary space-y-1">
                 <li>• Use {`{{name}}`} to personalize emails</li>
                 <li>• Keep subject lines under 50 characters</li>
                 <li>• Include a clear call-to-action</li>
@@ -2333,7 +2539,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 setEditingCampaign(null)
                 setCurrentPage('campaigns')
               }}
-              className="inline-flex items-center px-6 py-3 bg-white/5 border border-gray-600/50 hover:bg-white/10 hover:border-gray-500/50 text-gray-200 font-semibold rounded-xl transition-all duration-200"
+              className="inline-flex items-center px-6 py-3 bg-white/5 border border-border/50 hover:bg-white/10 hover:border-gray-500/50 text-gray-200 font-semibold rounded-xl transition-all duration-200"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-2" />
               Cancel
@@ -2341,7 +2547,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <button
               type="submit"
               disabled={updating || !formData.name || !formData.subject || !formData.html_content}
-              className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:scale-105 relative overflow-hidden group"
+              className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-card-foreground font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:scale-105 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               {updating ? (
@@ -2467,8 +2673,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Email Templates</h2>
-          <p className="text-gray-400 mt-1">Choose from 10 professionally designed templates to get started quickly</p>
+          <h2 className="text-2xl font-semibold text-card-foreground">Email Templates</h2>
+          <p className="text-muted-foreground mt-1">Choose from 10 professionally designed templates to get started quickly</p>
         </div>
 
         {/* Template Categories Filter */}
@@ -2479,8 +2685,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 key={category}
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 border text-sm font-medium rounded-full transition-all duration-200 hover:scale-105 ${selectedCategory === category
-                  ? 'bg-blue-500 border-blue-400 text-white shadow-lg shadow-blue-500/30'
-                  : 'bg-white/10 hover:bg-white/20 border-gray-600/30 hover:border-gray-500/50 text-gray-300 hover:text-white'
+                  ? 'bg-blue-500 border-blue-400 text-card-foreground shadow-lg shadow-blue-500/30'
+                  : 'bg-white/10 hover:bg-white/20 border-border/30 hover:border-gray-500/50 text-gray-300 hover:text-card-foreground'
                   }`}
               >
                 {category}
@@ -2491,27 +2697,27 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {filteredTemplates.map((template) => (
-            <div key={template.name} className="group relative bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 hover:from-white/10 hover:to-white/15 hover:border-gray-600/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/10">
+            <div key={template.name} className="group relative bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 hover:from-white/10 hover:to-white/15 hover:border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/10">
               {/* Icon */}
               <div className={`w-10 h-10 bg-gradient-to-br ${template.color} rounded-lg flex items-center justify-center mb-3 transition-transform duration-300`}>
-                <template.icon className="w-5 h-5 text-white" />
+                <template.icon className="w-5 h-5 text-card-foreground" />
               </div>
 
               {/* Title & Category */}
               <div className="mb-3">
-                <h3 className="text-sm font-bold text-white mb-1 group-hover:text-blue-300 transition-colors duration-300 line-clamp-1">{template.name}</h3>
-                <span className={`inline-block bg-gradient-to-r ${template.color} bg-opacity-20 border border-white/20 text-white text-xs font-medium px-2 py-0.5 rounded-full`}>
+                <h3 className="text-sm font-bold text-card-foreground mb-1 group-hover:text-primary transition-colors duration-300 line-clamp-1">{template.name}</h3>
+                <span className={`inline-block bg-gradient-to-r ${template.color} bg-opacity-20 border border-white/20 text-card-foreground text-xs font-medium px-2 py-0.5 rounded-full`}>
                   {template.category}
                 </span>
               </div>
 
               {/* Description */}
-              <p className="text-gray-400 text-xs leading-relaxed mb-4 line-clamp-2">{template.description}</p>
+              <p className="text-muted-foreground text-xs leading-relaxed mb-4 line-clamp-2">{template.description}</p>
 
               {/* Features */}
               <div className="mb-4">
                 <div className="text-xs text-gray-500 mb-2">Features:</div>
-                <ul className="text-xs text-gray-400 space-y-1">
+                <ul className="text-xs text-muted-foreground space-y-1">
                   {template.features.slice(0, 2).map((feature, index) => (
                     <li key={index} className="flex items-center">
                       <CheckCircleIcon className="w-3 h-3 text-green-400 mr-1" />
@@ -2537,7 +2743,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     setCurrentPage('template-editor')
                   }, 50)
                 }}
-                className="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 relative overflow-hidden group/btn cursor-pointer"
+                className="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-card-foreground text-xs font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 relative overflow-hidden group/btn cursor-pointer"
                 type="button"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
@@ -3026,10 +3232,10 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     if (!selectedTemplate) {
       return (
         <div className="text-center py-12">
-          <p className="text-gray-400">No template selected</p>
+          <p className="text-muted-foreground">No template selected</p>
           <button
             onClick={() => setCurrentPage('templates')}
-            className="mt-4 text-blue-400 hover:text-blue-300"
+            className="mt-4 text-primary hover:text-primary"
           >
             ← Back to Templates
           </button>
@@ -3047,13 +3253,13 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 setSelectedTemplate(null)
                 setCurrentPage('templates')
               }}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-muted-foreground hover:text-card-foreground transition-colors"
             >
               ← Back to Templates
             </button>
             <div>
-              <h2 className="text-2xl font-semibold text-white">Template Editor</h2>
-              <p className="text-gray-400 mt-1">Customize your {selectedTemplate?.name} template in real-time</p>
+              <h2 className="text-2xl font-semibold text-card-foreground">Template Editor</h2>
+              <p className="text-muted-foreground mt-1">Customize your {selectedTemplate?.name} template in real-time</p>
             </div>
           </div>
         </div>
@@ -3062,7 +3268,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Editor Panel */}
           <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
-            <h3 className="text-xl font-semibold text-white mb-6">Live Editor</h3>
+            <h3 className="text-xl font-semibold text-card-foreground mb-6">Live Editor</h3>
 
             <div className="space-y-6">
               <div>
@@ -3071,7 +3277,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   type="text"
                   value={editorData.campaignName}
                   onChange={(e) => handleInputChange('campaignName', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-background border border-border rounded-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="My Campaign Name"
                 />
               </div>
@@ -3082,7 +3288,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   type="text"
                   value={editorData.subject}
                   onChange={(e) => handleInputChange('subject', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-background border border-border rounded-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Your email subject"
                 />
               </div>
@@ -3093,7 +3299,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   type="text"
                   value={editorData.headline}
                   onChange={(e) => handleInputChange('headline', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-background border border-border rounded-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Main headline for your email"
                 />
               </div>
@@ -3104,7 +3310,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   value={editorData.bodyText}
                   onChange={(e) => handleInputChange('bodyText', e.target.value)}
                   rows={4}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-background border border-border rounded-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Your email content..."
                 />
               </div>
@@ -3116,7 +3322,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     type="text"
                     value={editorData.buttonText}
                     onChange={(e) => handleInputChange('buttonText', e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Learn More"
                   />
                 </div>
@@ -3126,7 +3332,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     type="url"
                     value={editorData.buttonLink}
                     onChange={(e) => handleInputChange('buttonLink', e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="https://example.com"
                   />
                 </div>
@@ -3134,7 +3340,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
               {/* Color Customization */}
               <div className="border-t border-gray-700/50 pt-6">
-                <h4 className="text-lg font-semibold text-white mb-4">Colors & Styling</h4>
+                <h4 className="text-lg font-semibold text-card-foreground mb-4">Colors & Styling</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Header Background</label>
@@ -3162,8 +3368,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
           {/* Preview Panel */}
           <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden">
             <div className="bg-gray-800/50 px-6 py-4 border-b border-gray-700/50">
-              <h3 className="text-lg font-semibold text-white">Live Preview</h3>
-              <p className="text-gray-400 text-sm">Changes update in real-time</p>
+              <h3 className="text-lg font-semibold text-card-foreground">Live Preview</h3>
+              <p className="text-muted-foreground text-sm">Changes update in real-time</p>
             </div>
 
             <div
@@ -3177,13 +3383,13 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-semibold text-white mb-2">Ready to send?</h3>
-              <p className="text-gray-400">Your edited email is ready. Create your campaign now!</p>
+              <h3 className="text-xl font-semibold text-card-foreground mb-2">Ready to send?</h3>
+              <p className="text-muted-foreground">Your edited email is ready. Create your campaign now!</p>
             </div>
             <button
               onClick={createCampaign}
               disabled={creating || !editorData.subject || !previewHtml}
-              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-card-foreground font-bold rounded-xl transition-all duration-300 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {creating ? (
                 <>
@@ -3241,7 +3447,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading analytics...</p>
+            <p className="text-muted-foreground">Loading analytics...</p>
           </div>
         </div>
       )
@@ -3250,8 +3456,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Analytics</h2>
-          <p className="text-gray-400 mt-1">Track your email performance and engagement</p>
+          <h2 className="text-2xl font-semibold text-card-foreground">Analytics</h2>
+          <p className="text-muted-foreground mt-1">Track your email performance and engagement</p>
         </div>
 
         {analytics && (
@@ -3266,15 +3472,15 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             {analytics.campaigns.length > 0 && (
               <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-700/50">
-                  <h3 className="text-xl font-semibold text-white">Campaign Performance</h3>
+                  <h3 className="text-xl font-semibold text-card-foreground">Campaign Performance</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-800/30">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Campaign</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Recipients</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Sent Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaign</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Recipients</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Sent Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
@@ -3282,14 +3488,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                         <tr key={campaign.id} className="hover:bg-gray-800/30">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
-                              <div className="text-sm font-medium text-white">{campaign.name}</div>
-                              <div className="text-sm text-gray-400">{campaign.subject}</div>
+                              <div className="text-sm font-medium text-card-foreground">{campaign.name}</div>
+                              <div className="text-sm text-muted-foreground">{campaign.subject}</div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-card-foreground">
                             {campaign.total_recipients || 0}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             {campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString() : 'Not sent'}
                           </td>
                         </tr>
@@ -3310,11 +3516,11 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-purple-500/20">
                 <ChartBarIcon className="w-10 h-10 text-purple-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">No analytics data yet</h3>
-              <p className="text-gray-400 mb-8 max-w-sm mx-auto">Send some campaigns to start tracking your email performance</p>
+              <h3 className="text-xl font-semibold text-card-foreground mb-3">No analytics data yet</h3>
+              <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Send some campaigns to start tracking your email performance</p>
               <button
                 onClick={() => setCurrentPage('campaigns')}
-                className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
+                className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-card-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
               >
                 <PlusIcon className="w-5 h-5 mr-2" />
                 Create Your First Campaign
@@ -3411,8 +3617,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Domain Management</h2>
-          <p className="text-gray-400 mt-1">Configure your email sending domains</p>
+          <h2 className="text-2xl font-semibold text-card-foreground">Domain Management</h2>
+          <p className="text-muted-foreground mt-1">Configure your email sending domains</p>
         </div>
 
         {domainSettings ? (
@@ -3421,11 +3627,11 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
               <div className="flex items-center mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
-                  <EnvelopeIcon className="w-6 h-6 text-white" />
+                  <EnvelopeIcon className="w-6 h-6 text-card-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Platform Domain</h3>
-                  <p className="text-gray-400 text-sm">Use our domain with your unique username</p>
+                  <h3 className="text-xl font-bold text-card-foreground">Platform Domain</h3>
+                  <p className="text-muted-foreground text-sm">Use our domain with your unique username</p>
                 </div>
               </div>
 
@@ -3438,7 +3644,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     type="text"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-gray-800 border border-border rounded-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Your Brand Name"
                   />
                 </div>
@@ -3452,10 +3658,10 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="flex-1 bg-gray-800 border border-gray-600 rounded-l-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 bg-gray-800 border border-border rounded-l-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="yourname"
                     />
-                    <div className="bg-gray-700 border border-gray-600 border-l-0 rounded-r-lg px-4 py-3 text-gray-300">
+                    <div className="bg-background border border-border border-l-0 rounded-r-lg px-4 py-3 text-gray-300">
                       .{domainSettings?.uniqueCode || 'loading'}@flowmail.rovelin.com
                     </div>
                   </div>
@@ -3469,7 +3675,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                     type="email"
                     value={replyToEmail}
                     onChange={(e) => setReplyToEmail(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-gray-800 border border-border rounded-lg px-4 py-3 text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="your-email@gmail.com"
                   />
               </div>
@@ -3484,13 +3690,13 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   <h4 className="text-green-400 font-bold text-lg">✅ Your Current Email Domain</h4>
                 </div>
                 <div className="space-y-3">
-                  <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-600/30">
+                  <div className="p-4 bg-gray-800/50 rounded-lg border border-border/30">
                     <div className="text-sm text-gray-300 mb-2">📧 Your Email Address:</div>
                     <div className="text-lg font-mono text-green-300 break-all">
                       {displayName || '[Your Name]'} &lt;{username || 'username'}.{domainSettings?.uniqueCode || 'loading'}@flowmail.rovelin.com&gt;
               </div>
                   </div>
-                  <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-600/30">
+                  <div className="p-4 bg-gray-800/50 rounded-lg border border-border/30">
                     <div className="text-sm text-gray-300 mb-2">🔗 Domain Details:</div>
                     <div className="text-sm text-gray-300">
                       <div>• <strong>Domain:</strong> flowmail.rovelin.com</div>
@@ -3500,7 +3706,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                       <div>• <strong>Status:</strong> <span className="text-green-400">✅ Active</span></div>
                     </div>
                   </div>
-                  <div className="text-xs text-gray-400 bg-gray-800/30 p-3 rounded-lg">
+                  <div className="text-xs text-muted-foreground bg-gray-800/30 p-3 rounded-lg">
                     💡 <strong>Unique Code System:</strong> Each user gets a unique code ({domainSettings?.uniqueCode || 'loading'}) to prevent email conflicts when multiple users use the platform. This ensures your emails are always delivered correctly!
                 </div>
                     </div>
@@ -3517,7 +3723,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 </div>
               <div className="text-sm text-gray-300">
                 <p className="mb-2">Custom domain feature will be available when we reach <strong className="text-purple-400">15 paying users</strong>!</p>
-                <p className="text-gray-400">This will allow you to send emails from your own domain (e.g., hello@yourbrand.com) for enhanced brand recognition and trust.</p>
+                <p className="text-muted-foreground">This will allow you to send emails from your own domain (e.g., hello@yourbrand.com) for enhanced brand recognition and trust.</p>
               </div>
             </div>
 
@@ -3525,7 +3731,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <button
               onClick={handleUpdateDomainSettings}
               disabled={domainLoading || !displayName || !username || !replyToEmail}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:scale-105"
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-card-foreground font-bold py-4 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:scale-105"
             >
               {domainLoading ? (
                 <>
@@ -3542,10 +3748,10 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-700 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <ClockIcon className="w-8 h-8 text-gray-400 animate-spin" />
+            <div className="w-16 h-16 bg-background rounded-xl flex items-center justify-center mx-auto mb-4">
+              <ClockIcon className="w-8 h-8 text-muted-foreground animate-spin" />
             </div>
-            <p className="text-gray-400">Loading domain settings...</p>
+            <p className="text-muted-foreground">Loading domain settings...</p>
           </div>
         )}
       </div>
@@ -3589,7 +3795,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         }}
         className={`inline-flex items-center p-1.5 rounded-lg transition-all duration-200 ${isCopied
           ? 'bg-green-500/20 text-green-400 border border-green-500/30 scale-110'
-          : 'text-gray-400 hover:text-white hover:bg-gray-700/50 hover:scale-105'
+          : 'text-muted-foreground hover:text-card-foreground hover:bg-background/50 hover:scale-105'
           }`}
         title={label || 'Copy to clipboard'}
         style={{ cursor: 'pointer' }}
@@ -3609,22 +3815,25 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
     const toastStyles = {
       success: {
-        bg: 'bg-gradient-to-r from-green-500 to-emerald-600',
-        border: 'border-green-400/50',
+        bg: 'bg-green-500',
+        border: 'border-green-500/30',
         shadow: 'shadow-green-500/25',
-        icon: CheckCircleIcon
+        icon: CheckCircleIcon,
+        textColor: 'text-white'
       },
       error: {
-        bg: 'bg-gradient-to-r from-red-600 to-red-700',
-        border: 'border-red-400/60',
-        shadow: 'shadow-red-500/40',
-        icon: XCircleIcon
+        bg: 'bg-destructive',
+        border: 'border-destructive/30',
+        shadow: 'shadow-destructive/25',
+        icon: XCircleIcon,
+        textColor: 'text-destructive-foreground'
       },
       info: {
-        bg: 'bg-gradient-to-r from-blue-500 to-blue-600',
-        border: 'border-blue-400/50',
-        shadow: 'shadow-blue-500/25',
-        icon: InformationCircleIcon
+        bg: 'bg-primary',
+        border: 'border-primary/30',
+        shadow: 'shadow-primary/25',
+        icon: InformationCircleIcon,
+        textColor: 'text-primary-foreground'
       }
     }
 
@@ -3633,7 +3842,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
     return (
       <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
-        <div className={`${style.bg} text-white px-6 py-4 rounded-xl shadow-2xl ${style.border} ${style.shadow} flex items-center max-w-md backdrop-blur-sm border-2`}>
+        <div className={`${style.bg} ${style.textColor} px-6 py-4 rounded-xl shadow-2xl ${style.border} ${style.shadow} flex items-center max-w-md backdrop-blur-sm border-2`}>
           <IconComponent className="w-6 h-6 mr-3 flex-shrink-0" />
           <span className="text-base font-semibold leading-relaxed">{toastMessage}</span>
         </div>
@@ -3647,16 +3856,16 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-900 border border-blue-500/30 rounded-2xl p-6 max-w-md w-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 shadow-2xl">
+        <div className="bg-card border border-primary/30 rounded-2xl p-6 max-w-md w-full bg-primary/5 shadow-2xl">
           <div className="flex items-center mb-4">
-            <PaperAirplaneIcon className="w-6 h-6 mr-3 text-blue-400" />
-            <h3 className="text-lg font-semibold text-white">Send Test Email</h3>
+            <PaperAirplaneIcon className="w-6 h-6 mr-3 text-primary" />
+            <h3 className="text-lg font-semibold text-card-foreground">Send Test Email</h3>
           </div>
-          <p className="text-gray-300 mb-4">
-            Enter the email address where you want to receive the test email for campaign: <strong className="text-blue-300">{testEmailDialog.campaignName}</strong>
+          <p className="text-muted-foreground mb-4">
+            Enter the email address where you want to receive the test email for campaign: <strong className="text-primary">{testEmailDialog.campaignName}</strong>
           </p>
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-card-foreground mb-2">
               Test Email Address
             </label>
             <input
@@ -3664,7 +3873,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
               placeholder="your-email@example.com"
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-background border border-input rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               autoFocus
             />
           </div>
@@ -3674,13 +3883,13 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 setTestEmailDialog({ open: false, campaignId: '', campaignName: '' })
                 setTestEmail('')
               }}
-              className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={performTestEmailSend}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center"
+              className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors flex items-center justify-center"
             >
               <PaperAirplaneIcon className="w-4 h-4 mr-2" />
               Send Test
@@ -3697,25 +3906,25 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
     const modalStyles = {
       danger: {
-        bg: 'bg-gradient-to-br from-red-500/20 to-red-600/20',
-        border: 'border-red-500/30',
-        buttonBg: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800',
+        bg: 'bg-destructive/10',
+        border: 'border-destructive/30',
+        buttonBg: 'bg-destructive hover:bg-destructive/90',
         icon: ExclamationTriangleIcon,
-        iconColor: 'text-red-400'
+        iconColor: 'text-destructive'
       },
       warning: {
-        bg: 'bg-gradient-to-br from-yellow-500/20 to-orange-600/20',
+        bg: 'bg-yellow-500/10',
         border: 'border-yellow-500/30',
-        buttonBg: 'bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700',
+        buttonBg: 'bg-yellow-500 hover:bg-yellow-600',
         icon: ExclamationTriangleIcon,
-        iconColor: 'text-yellow-400'
+        iconColor: 'text-yellow-500'
       },
       info: {
-        bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/20',
-        border: 'border-blue-500/30',
-        buttonBg: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800',
+        bg: 'bg-primary/10',
+        border: 'border-primary/30',
+        buttonBg: 'bg-primary hover:bg-primary/90',
         icon: InformationCircleIcon,
-        iconColor: 'text-blue-400'
+        iconColor: 'text-primary'
       }
     }
 
@@ -3735,24 +3944,24 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className={`bg-gray-900 border ${style.border} rounded-2xl p-6 max-w-md w-full ${style.bg} shadow-2xl`}>
+        <div className={`bg-card border ${style.border} rounded-2xl p-6 max-w-md w-full ${style.bg} shadow-2xl`}>
           <div className="flex items-center mb-4">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 ${style.bg}`}>
               <IconComponent className={`w-6 h-6 ${style.iconColor}`} />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">{confirmModalData.title}</h3>
+              <h3 className="text-xl font-semibold text-card-foreground">{confirmModalData.title}</h3>
             </div>
           </div>
           
-          <p className="text-gray-300 mb-6 leading-relaxed">
+          <p className="text-muted-foreground mb-6 leading-relaxed">
             {confirmModalData.message}
           </p>
           
           <div className="flex gap-3">
             <button
               onClick={handleCancel}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+              className="flex-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-3 px-4 rounded-xl transition-colors"
             >
               Cancel
             </button>
@@ -3829,8 +4038,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Settings</h2>
-          <p className="text-gray-400 mt-1">Manage your account, billing, and preferences</p>
+          <h2 className="text-2xl font-semibold text-card-foreground">Settings</h2>
+          <p className="text-muted-foreground mt-1">Manage your account, billing, and preferences</p>
           
         </div>
 
@@ -3845,16 +4054,16 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               userPlan?.plan === 'pro' ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
               'bg-gradient-to-br from-gray-500 to-gray-600'
             }`}>
-              <SparklesIcon className="w-6 h-6 text-white" />
+              <SparklesIcon className="w-6 h-6 text-card-foreground" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">
+              <h3 className="text-xl font-semibold text-card-foreground">
                 {userPlan?.plan === 'free' ? 'Free Plan' : 
                  userPlan?.plan === 'starter' ? 'Starter Plan' :
                  userPlan?.plan === 'growth' ? 'Growth Plan' : 
                  userPlan?.plan === 'pro' ? 'Pro Plan' : 'Free Plan'}
               </h3>
-              <p className="text-gray-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 {userPlan?.plan === 'free' ? '$0/month • 10 emails per day' : 
                  userPlan?.plan === 'starter' ? '$29/month • 3,000 emails per month' :
                  userPlan?.plan === 'growth' ? '$49/month • 5,000 emails per month' : 
@@ -3868,9 +4077,9 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-gray-300">Daily Email Usage</span>
-                <span className="text-sm text-gray-400">{userPlan?.emails_sent_today || 0} / 10 emails</span>
+                <span className="text-sm text-muted-foreground">{userPlan?.emails_sent_today || 0} / 10 emails</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-background rounded-full h-2">
                 <div 
                   className={`h-2 rounded-full transition-all ${
                     (userPlan?.emails_sent_today || 0) > 8 ? 'bg-red-500' : 
@@ -3888,11 +4097,11 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-gray-300">Monthly Email Usage</span>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-muted-foreground">
                   {userPlan?.emails_sent_this_month || 0} / {userPlan?.plan === 'starter' ? '3,000' : userPlan?.plan === 'growth' ? '5,000' : '10,000'} emails
                 </span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-background rounded-full h-2">
                 <div 
                   className="h-2 rounded-full transition-all bg-gradient-to-r from-green-500 to-blue-500"
                   style={{ 
@@ -3907,7 +4116,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
           )}
 
           <div className="border-t border-gray-700/50 pt-8">
-            <h4 className="text-xl font-bold text-white mb-6 text-center">Upgrade Your Plan</h4>
+            <h4 className="text-xl font-bold text-card-foreground mb-6 text-center">Upgrade Your Plan</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Starter Plan */}
               <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:bg-white/10 hover:border-green-500/30 transition-all duration-300 group relative overflow-hidden">
@@ -3915,16 +4124,16 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-                      <RocketLaunchIcon className="w-6 h-6 text-white" />
+                      <RocketLaunchIcon className="w-6 h-6 text-card-foreground" />
                     </div>
                     <div className="bg-green-500/20 text-green-400 text-xs font-semibold px-3 py-1 rounded-full border border-green-500/30">
                       STARTER
                     </div>
                   </div>
-                  <h5 className="text-xl font-bold text-white mb-2">Starter Plan</h5>
+                  <h5 className="text-xl font-bold text-card-foreground mb-2">Starter Plan</h5>
                   <div className="flex items-baseline mb-4">
-                    <span className="text-3xl font-bold text-white">$29</span>
-                    <span className="text-gray-400 ml-1">/month</span>
+                    <span className="text-3xl font-bold text-card-foreground">$29</span>
+                    <span className="text-muted-foreground ml-1">/month</span>
                   </div>
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center text-sm text-gray-300">
@@ -3951,7 +4160,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   <button
                     onClick={() => handleUpgrade('starter')}
                     disabled={upgradingPlan === 'starter'}
-                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-green-600/25 hover:shadow-green-600/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-card-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-green-600/25 hover:shadow-green-600/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
                     {upgradingPlan === 'starter' ? (
                       <>
@@ -3974,16 +4183,16 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                      <RocketLaunchIcon className="w-6 h-6 text-white" />
+                      <RocketLaunchIcon className="w-6 h-6 text-card-foreground" />
                     </div>
-                    <div className="bg-blue-500/20 text-blue-400 text-xs font-semibold px-3 py-1 rounded-full border border-blue-500/30">
+                    <div className="bg-primary/20 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-blue-500/30">
                       POPULAR
                     </div>
                   </div>
-                  <h5 className="text-xl font-bold text-white mb-2">Growth Plan</h5>
+                  <h5 className="text-xl font-bold text-card-foreground mb-2">Growth Plan</h5>
                   <div className="flex items-baseline mb-4">
-                    <span className="text-3xl font-bold text-white">$49</span>
-                    <span className="text-gray-400 ml-1">/month</span>
+                    <span className="text-3xl font-bold text-card-foreground">$49</span>
+                    <span className="text-muted-foreground ml-1">/month</span>
                   </div>
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center text-sm text-gray-300">
@@ -4010,7 +4219,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   <button
                     onClick={() => handleUpgrade('growth')}
                     disabled={upgradingPlan === 'growth'}
-                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-card-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
                     {upgradingPlan === 'growth' ? (
                       <>
@@ -4033,16 +4242,16 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                      <FireIcon className="w-6 h-6 text-white" />
+                      <FireIcon className="w-6 h-6 text-card-foreground" />
                     </div>
                     <div className="bg-purple-500/20 text-purple-400 text-xs font-semibold px-3 py-1 rounded-full border border-purple-500/30">
                       PREMIUM
                     </div>
                   </div>
-                  <h5 className="text-xl font-bold text-white mb-2">Pro Plan</h5>
+                  <h5 className="text-xl font-bold text-card-foreground mb-2">Pro Plan</h5>
                   <div className="flex items-baseline mb-4">
-                    <span className="text-3xl font-bold text-white">$129</span>
-                    <span className="text-gray-400 ml-1">/month</span>
+                    <span className="text-3xl font-bold text-card-foreground">$129</span>
+                    <span className="text-muted-foreground ml-1">/month</span>
                   </div>
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center text-sm text-gray-300">
@@ -4069,7 +4278,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
                   <button
                     onClick={() => handleUpgrade('pro')}
                     disabled={upgradingPlan === 'pro'}
-                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-card-foreground font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
                     {upgradingPlan === 'pro' ? (
                       <>
@@ -4094,15 +4303,18 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 text-white relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-indigo-500/5"></div>
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5"></div>
+      <div className="absolute top-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
 
       <div className="relative z-10">
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div className={cn(
+          "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+          isMobile ? "pb-20" : "pb-4 sm:pb-8"
+        )}>
           {currentPage === 'dashboard' && <DashboardPage />}
           {currentPage === 'campaigns' && <CampaignsPage />}
           {currentPage === 'subscribers' && <SubscribersPage />}
@@ -4127,44 +4339,44 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
       {/* Progress Modal */}
       {campaignProgress && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+              <h3 className="text-2xl font-bold text-card-foreground">
                 {campaignProgress.status === 'completed' ? 'Campaign Complete!' : 'Sending Campaign'}
               </h3>
               <button
                 onClick={() => setCampaignProgress(null)}
-                className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700/50 rounded-lg"
+                className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-accent rounded-lg"
               >
                 <XCircleIcon className="w-6 h-6" />
               </button>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 {campaignProgress.status === 'completed' ? (
-                  <CheckCircleIcon className="w-8 h-8 text-white" />
+                  <CheckCircleIcon className="w-8 h-8 text-primary-foreground" />
                 ) : (
-                  <PaperAirplaneIcon className="w-8 h-8 text-white" />
+                  <PaperAirplaneIcon className="w-8 h-8 text-primary-foreground" />
                 )}
               </div>
 
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-400">Progress</span>
-                  <span className="text-sm text-white">
+                  <span className="text-sm text-muted-foreground">Progress</span>
+                  <span className="text-sm text-card-foreground">
                     {campaignProgress.current || 0} / {campaignProgress.total || 0}
                   </span>
                 </div>
-                <div className="w-full bg-gray-700/50 rounded-full h-3 border border-gray-600/30">
+                <div className="w-full bg-muted rounded-full h-3 border border-border">
                   <div
-                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300 shadow-sm"
+                    className="bg-primary h-3 rounded-full transition-all duration-300 shadow-sm"
                     style={{
                       width: `${campaignProgress.total > 0 ? (campaignProgress.current / campaignProgress.total) * 100 : 0}%`
                     }}
                   ></div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {campaignProgress.status === 'completed' ? 'All emails sent successfully!' :
                     campaignProgress.status === 'failed' ? 'Campaign failed' : 'Sending emails...'}
                 </p>
@@ -4173,12 +4385,12 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               {campaignProgress.status === 'completed' && (
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Sent:</span>
-                    <span className="text-green-400">{campaignProgress.sent || 0}</span>
+                    <span className="text-muted-foreground">Sent:</span>
+                    <span className="text-green-500">{campaignProgress.sent || 0}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Failed:</span>
-                    <span className="text-red-400">{campaignProgress.failed || 0}</span>
+                    <span className="text-muted-foreground">Failed:</span>
+                    <span className="text-red-500">{campaignProgress.failed || 0}</span>
                   </div>
                 </div>
               )}
@@ -4186,7 +4398,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
               {campaignProgress.status === 'completed' && (
                 <button
                   onClick={() => setCampaignProgress(null)}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-6 rounded-xl transition-all duration-200"
                 >
                   Close
                 </button>
@@ -4211,6 +4423,9 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
       {/* Confirmation Modal */}
       <ConfirmModal />
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
 
     </div>
   )
