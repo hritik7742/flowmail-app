@@ -298,8 +298,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
   const syncMembers = async () => {
     setLoading(true)
     try {
-      // Use the sync method with proper company context detection
-      const response = await fetch('/api/sync-members-with-company', {
+      // Use the dynamic sync method - company ID will be extracted from experience
+      const response = await fetch('/api/sync-members-dynamic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, experienceId }),
