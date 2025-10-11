@@ -298,8 +298,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
   const syncMembers = async () => {
     setLoading(true)
     try {
-      // Use the fixed sync method with perfect user isolation and 403 error handling
-      const response = await fetch('/api/sync-members-fixed', {
+      // Use the final sync method with correct Whop API usage
+      const response = await fetch('/api/sync-members-final', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, experienceId }),

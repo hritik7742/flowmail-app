@@ -65,6 +65,7 @@ export async function POST(request) {
       .from('subscribers')
       .select(`
         id,
+        user_id,
         whop_member_id,
         email,
         name,
