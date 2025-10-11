@@ -205,7 +205,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
       // Load all data in parallel for better performance
       const [subsResponse, campaignsResponse, userResponse] = await Promise.all([
-        fetch('/api/get-subscribers', {
+        fetch('/api/get-subscribers-optimized', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId }),
@@ -298,32 +298,27 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
   const syncMembers = async () => {
     setLoading(true)
     try {
-      // Try the new v2 sync method first
-      let response = await fetch('/api/sync-members-v2', {
+      // Use the optimized sync method with enhanced user isolation
+      const response = await fetch('/api/sync-members-optimized', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, experienceId }),
       })
 
-      let result = await response.json()
-
-      // If v2 fails, try the original method
-      if (!result.success) {
-        console.log('V2 sync failed, trying original method...')
-        response = await fetch('/api/sync-members', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, experienceId }),
-        })
-        result = await response.json()
-      }
+      const result = await response.json()
 
       if (result.success) {
-        const sourceMsg = result.source === 'whop_api_v2' ? 'real members' : 'test members'
-        showToastMessage(`✅ Successfully synced ${result.count} ${sourceMsg} from your Whop community!`, 'success')
+        showToastMessage(`✅ Successfully synced ${result.count} members from your Whop community!`, 'success')
         loadDashboardData()
       } else {
-        showToastMessage('❌ Error syncing members: ' + result.error, 'error')
+        // Handle specific error codes
+        if (result.code === 'AUTH_FAILED') {
+          showToastMessage('❌ Authentication failed. Please refresh the page and try again.', 'error')
+        } else if (result.code === 'USER_ID_MISMATCH') {
+          showToastMessage('❌ User verification failed. Please refresh the page.', 'error')
+        } else {
+          showToastMessage('❌ Error syncing members: ' + result.error, 'error')
+        }
       }
     } catch (error: any) {
       showToastMessage('❌ Error syncing members: ' + error.message, 'error')
@@ -708,7 +703,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
       console.log('Sending request with body:', requestBody)
 
-      const response = await fetch('/api/add-member', {
+      const response = await fetch('/api/add-member-optimized', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
@@ -720,7 +715,14 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         setShowAddMemberModal(false)
         loadDashboardData()
       } else {
-        showToastMessage(`❌ ${result.error}`, 'error')
+        // Handle specific error codes
+        if (result.code === 'AUTH_FAILED') {
+          showToastMessage('❌ Authentication failed. Please refresh the page and try again.', 'error')
+        } else if (result.code === 'USER_ID_MISMATCH') {
+          showToastMessage('❌ User verification failed. Please refresh the page.', 'error')
+        } else {
+          showToastMessage(`❌ ${result.error}`, 'error')
+        }
       }
     } catch (error: any) {
       showToastMessage('❌ Error: ' + error.message, 'error')
