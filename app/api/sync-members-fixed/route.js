@@ -1,0 +1,409 @@
+import { supabaseAdmin } from '@/lib/supabase'
+import { whopSdk } from '@/lib/whop-sdk'
+import { headers } from 'next/headers'
+
+// Generate a unique code for the user with collision detection
+async function generateUniqueCode() {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let attempts = 0
+  const maxAttempts = 10
+  
+  while (attempts < maxAttempts) {
+    let result = ''
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    
+    // Check if this code already exists in database
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('unique_code', result)
+      .single()
+    
+    // If no existing user has this code, it's unique!
+    if (!existingUser) {
+      console.log(`✅ Generated unique code: ${result} (attempt ${attempts + 1})`)
+      return result
+    }
+    
+    attempts++
+    console.log(`⚠️ Code collision detected: ${result}, retrying... (attempt ${attempts})`)
+  }
+  
+  // Fallback: use timestamp + random for guaranteed uniqueness
+  const timestamp = Date.now().toString(36)
+  const random = Math.random().toString(36).substring(2, 6)
+  const fallbackCode = (timestamp + random).substring(0, 8)
+  console.log(`🔄 Using fallback unique code: ${fallbackCode}`)
+  return fallbackCode
+}
+
+export async function POST(request) {
+  try {
+    const { userId, experienceId } = await request.json()
+    
+    if (!userId) {
+      return Response.json({ success: false, error: 'User ID required' }, { status: 400 })
+    }
+
+    console.log('=== FIXED SYNC MEMBERS - PERFECT USER ISOLATION ===')
+    console.log('User ID:', userId)
+    console.log('Experience ID:', experienceId)
+
+    // CRITICAL: Verify user authentication using Whop's official method
+    const headersList = await headers()
+    let verifiedUserId
+    
+    try {
+      const userToken = await whopSdk.verifyUserToken(headersList)
+      verifiedUserId = userToken.userId
+      console.log('✅ User authenticated via Whop SDK:', verifiedUserId)
+      
+      // Double-check: ensure the userId from request matches the verified user
+      if (verifiedUserId !== userId) {
+        console.error('❌ User ID mismatch:', { requested: userId, verified: verifiedUserId })
+        return Response.json({
+          success: false,
+          error: 'Authentication mismatch. User ID does not match verified user.',
+          code: 'USER_ID_MISMATCH'
+        }, { status: 403 })
+      }
+    } catch (authError) {
+      console.log('❌ Whop authentication failed:', authError.message)
+      return Response.json({
+        success: false,
+        error: 'Authentication failed. Make sure you are accessing this from within a Whop app context.',
+        details: authError.message,
+        code: 'AUTH_FAILED'
+      }, { status: 401 })
+    }
+
+    // Ensure user exists in our database with proper isolation
+    let user
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('whop_user_id', verifiedUserId) // Use verified user ID for security
+      .single()
+
+    if (existingUser) {
+      user = existingUser
+      
+      // Ensure existing user has a unique code
+      if (!user.unique_code) {
+        const uniqueCode = await generateUniqueCode()
+        const { data: updatedUser, error: updateError } = await supabaseAdmin
+          .from('users')
+          .update({ 
+            unique_code: uniqueCode,
+            username: user.username || 'user',
+            display_name: user.display_name || 'FlowMail User'
+          })
+          .eq('whop_user_id', verifiedUserId)
+          .select()
+          .single()
+        
+        if (updateError) {
+          console.error('Error updating user with unique code:', updateError)
+          return Response.json({ success: false, error: 'Failed to update user' }, { status: 500 })
+        }
+        user = updatedUser
+      }
+    } else {
+      // Create new user with unique code
+      const uniqueCode = await generateUniqueCode()
+      const { data: newUser, error: userError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          whop_user_id: verifiedUserId,
+          email: 'user@example.com',
+          company_name: 'FlowMail User',
+          plan: 'free',
+          emails_sent_this_month: 0,
+          unique_code: uniqueCode,
+          username: 'user',
+          display_name: 'FlowMail User',
+          reply_to_email: 'user@example.com'
+        })
+        .select()
+        .single()
+
+      if (userError) {
+        console.error('Error creating user:', userError)
+        return Response.json({ success: false, error: 'Failed to create user' }, { status: 500 })
+      }
+      user = newUser
+    }
+
+    console.log('✅ User verified and ready:', user.id)
+
+    // Get the company ID from environment
+    const companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID
+    console.log('Company ID:', companyId)
+
+    if (!companyId) {
+      return Response.json({
+        success: false,
+        error: 'NEXT_PUBLIC_WHOP_COMPANY_ID is not configured',
+        code: 'MISSING_COMPANY_ID'
+      }, { status: 500 })
+    }
+
+    // Try to fetch members from Whop API
+    let realMembers = []
+    let apiError = null
+
+    try {
+      console.log('=== Attempting to fetch members from Whop API ===')
+      
+      // First try with Whop SDK
+      try {
+        const result = await whopSdk.companies.listMemberships({
+          companyId: companyId,
+          filters: {
+            membershipStatus: "active",
+            headerFilter: "active"
+          },
+          first: 100
+        })
+
+        console.log('Whop SDK Response structure:', Object.keys(result || {}))
+
+        // Process the response based on structure
+        let memberships = []
+        if (result?.memberships?.nodes?.length > 0) {
+          memberships = result.memberships.nodes
+        } else if (result?.memberships?.edges?.length > 0) {
+          memberships = result.memberships.edges.map(edge => edge.node)
+        } else if (result?.data?.length > 0) {
+          memberships = result.data
+        }
+
+        console.log(`Found ${memberships.length} total memberships via SDK`)
+
+        // Filter and process valid memberships
+        const validMemberships = memberships.filter(membership => {
+          const member = membership.member
+          return member && member.email && member.name && member.id
+        })
+
+        realMembers = validMemberships.map(membership => {
+          const member = membership.member
+          return {
+            whop_member_id: membership.id,
+            email: member.email.toLowerCase().trim(),
+            name: member.name || member.username || 'Unknown',
+            tier: membership.accessPass?.title || membership.plan?.name || 'Member',
+            status: membership.status === 'completed' ? 'active' : 'inactive',
+          }
+        })
+        
+        console.log(`✅ Found ${realMembers.length} valid members via Whop SDK`)
+        
+      } catch (sdkError) {
+        console.log('❌ Whop SDK failed, trying direct API:', sdkError.message)
+        
+        // Fallback to direct API call
+        const response = await fetch(`https://api.whop.com/api/v2/companies/${companyId}/memberships?status=active&limit=100`, {
+          headers: {
+            'Authorization': `Bearer ${process.env.WHOP_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Direct API Response structure:', Object.keys(data || {}))
+
+          const memberships = data?.data || []
+          const validMemberships = memberships.filter(membership => {
+            const member = membership.member
+            return member && member.email && member.name && member.id
+          })
+
+          realMembers = validMemberships.map(membership => {
+            const member = membership.member
+            return {
+              whop_member_id: membership.id,
+              email: member.email.toLowerCase().trim(),
+              name: member.name || member.username || 'Unknown',
+              tier: membership.accessPass?.title || membership.plan?.name || 'Member',
+              status: membership.status === 'completed' ? 'active' : 'inactive',
+            }
+          })
+          
+          console.log(`✅ Found ${realMembers.length} valid members via direct API`)
+        } else {
+          const errorText = await response.text()
+          console.error('Direct API Error:', response.status, errorText)
+          apiError = {
+            status: response.status,
+            message: errorText,
+            type: 'direct_api_error'
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ All API methods failed:', error)
+      apiError = {
+        status: 500,
+        message: error.message,
+        type: 'general_error'
+      }
+    }
+
+    // If API failed, provide helpful error message
+    if (realMembers.length === 0 && apiError) {
+      let errorMessage = 'Failed to fetch members from Whop API'
+      let suggestions = []
+      
+      if (apiError.status === 403) {
+        errorMessage = 'Access denied to Whop API (403 Forbidden)'
+        suggestions = [
+          'Check your WHOP_API_KEY permissions in Whop dashboard',
+          'Ensure your API key has "Read Memberships" permission',
+          'Verify your NEXT_PUBLIC_WHOP_COMPANY_ID is correct',
+          'Make sure you are accessing from within your Whop app',
+          'Check if your Whop app has the correct scopes/permissions'
+        ]
+      } else if (apiError.status === 401) {
+        errorMessage = 'Whop API authentication failed (401 Unauthorized)'
+        suggestions = [
+          'Verify your WHOP_API_KEY is correct',
+          'Check if your API key has expired',
+          'Ensure your Whop app is properly configured'
+        ]
+      } else {
+        suggestions = [
+          'Check your WHOP_API_KEY permissions',
+          'Verify your NEXT_PUBLIC_WHOP_COMPANY_ID is correct',
+          'Ensure your Whop app has membership read permissions',
+          'Make sure you have active members in your community',
+          'Try refreshing the page and syncing again'
+        ]
+      }
+
+      return Response.json({
+        success: false,
+        error: errorMessage,
+        details: apiError.message,
+        suggestions: suggestions,
+        debug: {
+          companyId,
+          verifiedUserId,
+          experienceId,
+          apiError: apiError
+        }
+      }, { status: apiError.status || 500 })
+    }
+
+    // If no real members found, return helpful error
+    if (realMembers.length === 0) {
+      return Response.json({
+        success: false,
+        error: 'No active members found in your Whop community',
+        suggestions: [
+          'Make sure your Whop community has active paying members',
+          'Check that members have completed their purchases',
+          'Verify your company ID is correct in the environment variables',
+          'Ensure your API key has the correct permissions'
+        ],
+        debug: {
+          companyId,
+          verifiedUserId,
+          experienceId
+        }
+      }, { status: 404 })
+    }
+
+    // CRITICAL: Clear existing Whop-synced subscribers for this user first
+    // This ensures we don't have stale data and maintain perfect user isolation
+    console.log('🧹 Clearing existing Whop-synced subscribers for user:', user.id)
+    const { error: deleteError } = await supabaseAdmin
+      .from('subscribers')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('source', 'whop_sync')
+
+    if (deleteError) {
+      console.error('Error clearing existing subscribers:', deleteError)
+      return Response.json({ 
+        success: false, 
+        error: 'Failed to clear existing subscribers' 
+      }, { status: 500 })
+    }
+
+    // Sync new members to database with perfect user isolation
+    let syncedCount = 0
+    const syncErrors = []
+    const currentTime = new Date().toISOString()
+
+    console.log(`📥 Syncing ${realMembers.length} members to database for user ${user.id}...`)
+
+    for (const member of realMembers) {
+      try {
+        // Insert new subscriber with perfect user isolation
+        const { error } = await supabaseAdmin
+          .from('subscribers')
+          .insert({
+            user_id: user.id, // CRITICAL: This ensures perfect user isolation
+            whop_member_id: member.whop_member_id,
+            email: member.email,
+            name: member.name,
+            tier: member.tier,
+            status: member.status,
+            synced_at: currentTime,
+            source: 'whop_sync',
+            created_at: currentTime
+          })
+
+        if (!error) {
+          syncedCount++
+        } else {
+          syncErrors.push({ member: member.name, error: error.message })
+          console.error('Error inserting member:', member.name, error)
+        }
+      } catch (memberError) {
+        syncErrors.push({ member: member.name, error: memberError.message })
+        console.error('Error processing member:', member.name, memberError)
+      }
+    }
+
+    console.log(`✅ Successfully synced ${syncedCount}/${realMembers.length} members for user ${user.id}`)
+
+    // Update user's last sync time
+    await supabaseAdmin
+      .from('users')
+      .update({ updated_at: currentTime })
+      .eq('id', user.id)
+
+    return Response.json({
+      success: true,
+      message: `Successfully synced ${syncedCount} members from your Whop community!`,
+      count: syncedCount,
+      total_found: realMembers.length,
+      members: realMembers.map(m => ({ 
+        name: m.name, 
+        email: m.email, 
+        tier: m.tier,
+        status: m.status 
+      })),
+      source: 'whop_official_api',
+      user_id: user.id,
+      user_whop_id: user.whop_user_id,
+      sync_errors: syncErrors.length > 0 ? syncErrors : undefined,
+      timestamp: currentTime
+    })
+
+  } catch (error) {
+    console.error('=== FIXED SYNC MEMBERS CRITICAL ERROR ===', error)
+    return Response.json({
+      success: false,
+      error: 'Critical error in sync process',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 })
+  }
+}

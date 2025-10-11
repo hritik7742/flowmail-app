@@ -205,7 +205,7 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
 
       // Load all data in parallel for better performance
       const [subsResponse, campaignsResponse, userResponse] = await Promise.all([
-        fetch('/api/get-subscribers-optimized', {
+        fetch('/api/get-subscribers-fixed', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId }),
@@ -298,8 +298,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
   const syncMembers = async () => {
     setLoading(true)
     try {
-      // Use the optimized sync method with enhanced user isolation
-      const response = await fetch('/api/sync-members-optimized', {
+      // Use the fixed sync method with perfect user isolation and 403 error handling
+      const response = await fetch('/api/sync-members-fixed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, experienceId }),
@@ -311,11 +311,16 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
         showToastMessage(`✅ Successfully synced ${result.count} members from your Whop community!`, 'success')
         loadDashboardData()
       } else {
-        // Handle specific error codes
+        // Handle specific error codes with helpful messages
         if (result.code === 'AUTH_FAILED') {
           showToastMessage('❌ Authentication failed. Please refresh the page and try again.', 'error')
         } else if (result.code === 'USER_ID_MISMATCH') {
           showToastMessage('❌ User verification failed. Please refresh the page.', 'error')
+        } else if (result.code === 'MISSING_COMPANY_ID') {
+          showToastMessage('❌ Whop configuration error. Please contact support.', 'error')
+        } else if (result.suggestions && result.suggestions.length > 0) {
+          // Show the first suggestion as the main error message
+          showToastMessage(`❌ ${result.error}. ${result.suggestions[0]}`, 'error')
         } else {
           showToastMessage('❌ Error syncing members: ' + result.error, 'error')
         }
