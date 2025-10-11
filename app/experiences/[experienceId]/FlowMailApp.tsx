@@ -298,8 +298,8 @@ function FlowMailApp({ user, userId, experienceId }: FlowMailAppProps) {
   const syncMembers = async () => {
     setLoading(true)
     try {
-      // Use the final sync method with correct Whop API usage
-      const response = await fetch('/api/sync-members-final', {
+      // Use the sync method with proper company context detection
+      const response = await fetch('/api/sync-members-with-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, experienceId }),

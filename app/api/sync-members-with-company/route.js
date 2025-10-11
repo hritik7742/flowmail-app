@@ -47,7 +47,7 @@ export async function POST(request) {
       return Response.json({ success: false, error: 'User ID required' }, { status: 400 })
     }
 
-    console.log('=== FINAL SYNC MEMBERS - CORRECT WHOP API USAGE ===')
+    console.log('=== SYNC MEMBERS WITH COMPANY CONTEXT ===')
     console.log('User ID:', userId)
     console.log('Experience ID:', experienceId)
 
@@ -84,7 +84,7 @@ export async function POST(request) {
     const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('whop_user_id', verifiedUserId) // Use verified user ID for security
+      .eq('whop_user_id', verifiedUserId)
       .single()
 
     if (existingUser) {
@@ -138,29 +138,55 @@ export async function POST(request) {
 
     console.log('✅ User verified and ready:', user.id)
 
-    // CRITICAL: The user token doesn't contain company information
-    // According to Whop docs, we need to use the environment company ID
-    // This is the company where the app is installed
-    const companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID
+    // CRITICAL: Try to get the user's company context using different methods
+    let companyId = null
+    let companyContext = null
     
+    try {
+      // Method 1: Try to get user's memberships to find their company
+      console.log('=== Method 1: Getting user memberships ===')
+      const memberships = await whopSdk.users.listMemberships({
+        userId: verifiedUserId
+      })
+      
+      console.log('User memberships:', JSON.stringify(memberships, null, 2))
+      
+      if (memberships?.data && memberships.data.length > 0) {
+        // Get the first active membership's company
+        const activeMembership = memberships.data.find(m => m.status === 'active' || m.status === 'completed')
+        if (activeMembership?.companyId) {
+          companyId = activeMembership.companyId
+          console.log('✅ Found company ID from user memberships:', companyId)
+        }
+      }
+      
+    } catch (membershipError) {
+      console.error('Error getting user memberships:', membershipError)
+    }
+    
+    // Method 2: If no company found, use environment fallback
+    if (!companyId) {
+      companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID
+      console.log('⚠️ Using environment company ID as fallback:', companyId)
+    }
+
     if (!companyId) {
       return Response.json({
         success: false,
-        error: 'NEXT_PUBLIC_WHOP_COMPANY_ID is not configured in environment variables.',
+        error: 'Could not determine company ID. Make sure you are accessing this from within a Whop community.',
         code: 'NO_COMPANY_ID'
-      }, { status: 500 })
+      }, { status: 400 })
     }
 
-    console.log('🎯 Using environment company ID:', companyId)
-    console.log('ℹ️ Note: All users will sync from this company since user token has no company info')
+    console.log('🎯 Final Company ID for sync:', companyId)
 
     // FIXED: Use the correct Whop SDK method for getting memberships
     let realMembers = []
 
     try {
-      console.log('=== Using CORRECT Whop SDK Method ===')
+      console.log('=== Using Whop SDK with Company Context ===')
       
-      // According to Whop docs, use the correct method with the user's company ID
+      // Use the SDK with the determined company ID
       const result = await whopSdk.companies.listMemberships({
         companyId: companyId,
         filters: {
@@ -219,63 +245,17 @@ export async function POST(request) {
     } catch (sdkError) {
       console.error('❌ Whop SDK Error:', sdkError)
       
-      // Fallback: Try alternative SDK methods
-      try {
-        console.log('=== Fallback: Trying alternative SDK method ===')
-        
-        // Try without filters
-        const result2 = await whopSdk.companies.listMemberships({
-          companyId: companyId,
-          first: 100
-        })
-        
-        console.log('Fallback SDK Response:', JSON.stringify(result2, null, 2))
-        
-        // Process fallback response
-        let memberships = []
-        if (result2?.memberships?.nodes) {
-          memberships = result2.memberships.nodes
-        } else if (result2?.memberships?.edges) {
-          memberships = result2.memberships.edges.map(edge => edge.node)
-        } else if (result2?.data) {
-          memberships = result2.data
-        } else if (Array.isArray(result2)) {
-          memberships = result2
-        }
-
-        const validMemberships = memberships.filter(membership => {
-          const member = membership.member || membership.user
-          return member && member.email && (member.name || member.username) && membership.id
-        })
-
-        realMembers = validMemberships.map(membership => {
-          const member = membership.member || membership.user
-          return {
-            whop_member_id: membership.id,
-            email: member.email.toLowerCase().trim(),
-            name: member.name || member.username || 'Unknown',
-            tier: membership.accessPass?.title || membership.plan?.name || membership.tier || 'Member',
-            status: membership.status === 'completed' || membership.status === 'active' ? 'active' : 'inactive',
-          }
-        })
-        
-        console.log(`✅ Found ${realMembers.length} valid members via fallback SDK method`)
-        
-      } catch (fallbackError) {
-        console.error('❌ Fallback SDK Error:', fallbackError)
-        
-        return Response.json({
-          success: false,
-          error: 'Failed to fetch members from Whop API',
-          details: fallbackError.message,
-          suggestions: [
-            'Check your Whop app permissions',
-            'Verify your Company ID is correct',
-            'Make sure you have active members in your community',
-            'Try refreshing the page and syncing again'
-          ]
-        }, { status: 500 })
-      }
+      return Response.json({
+        success: false,
+        error: 'Failed to fetch members from Whop API',
+        details: sdkError.message,
+        suggestions: [
+          'Check your Whop app permissions',
+          'Verify your Company ID is correct',
+          'Make sure you have active members in your community',
+          'Try refreshing the page and syncing again'
+        ]
+      }, { status: 500 })
     }
 
     // If no real members found, return helpful error
@@ -371,12 +351,13 @@ export async function POST(request) {
       source: 'whop_official_api',
       user_id: user.id,
       user_whop_id: user.whop_user_id,
+      company_id_used: companyId,
       sync_errors: syncErrors.length > 0 ? syncErrors : undefined,
       timestamp: currentTime
     })
 
   } catch (error) {
-    console.error('=== FINAL SYNC MEMBERS CRITICAL ERROR ===', error)
+    console.error('=== SYNC MEMBERS WITH COMPANY CONTEXT CRITICAL ERROR ===', error)
     return Response.json({
       success: false,
       error: 'Critical error in sync process',

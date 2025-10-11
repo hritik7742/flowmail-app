@@ -80,7 +80,8 @@ export const whopSdk = hasRequiredEnvVars ? (() => {
 		// Agent user ID for making requests on behalf of the app
 		onBehalfOfUserId: process.env.WHOP_AGENT_USER_ID || '',
 
-		// Company ID for the requests
-		companyId: process.env.NEXT_PUBLIC_WHOP_COMPANY_ID || '',
+		// CRITICAL: Do NOT set companyId here when you want each user to sync from their own company
+		// The SDK will automatically use the company context from the user's request
+		// companyId: process.env.NEXT_PUBLIC_WHOP_COMPANY_ID || '', // REMOVED
 	});
 })() : createMockSdk();
