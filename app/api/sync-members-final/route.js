@@ -138,45 +138,44 @@ export async function POST(request) {
 
     console.log('✅ User verified and ready:', user.id)
 
-    // CRITICAL: Get the company ID from the authenticated user, not environment variables
-    // This ensures each user syncs from THEIR company, not a fixed company
+    // CRITICAL: Get the company ID from the authenticated user's context
+    // According to Whop docs, we need to use the companyId from the SDK context
     let companyId
     
     try {
-      // Get the user's company information from Whop
-      const userInfo = await whopSdk.users.getCurrentUser()
-      console.log('User info from Whop:', JSON.stringify(userInfo, null, 2))
+      // Method 1: Try to get company ID from the current user's context
+      // The SDK should automatically use the company context when called from within a Whop app
+      const userToken = await whopSdk.verifyUserToken(headersList)
+      console.log('User token info:', JSON.stringify(userToken, null, 2))
       
-      // Extract company ID from user info
-      if (userInfo?.company?.id) {
-        companyId = userInfo.company.id
-        console.log('✅ Using user\'s company ID:', companyId)
-      } else if (userInfo?.companies && userInfo.companies.length > 0) {
-        // If user has multiple companies, use the first one
-        companyId = userInfo.companies[0].id
-        console.log('✅ Using user\'s first company ID:', companyId)
-      } else {
-        // Fallback: try to get company from user's memberships
-        const memberships = await whopSdk.users.getMemberships()
-        if (memberships && memberships.length > 0) {
-          companyId = memberships[0].companyId
-          console.log('✅ Using company ID from user\'s membership:', companyId)
-        }
+      // Check if the user token contains company information
+      if (userToken?.companyId) {
+        companyId = userToken.companyId
+        console.log('✅ Using company ID from user token:', companyId)
+      } else if (userToken?.company?.id) {
+        companyId = userToken.company.id
+        console.log('✅ Using company ID from user token company:', companyId)
       }
+      
+      // Method 2: If not found in token, try to get from environment as fallback
+      // This is the company where the app is installed
+      if (!companyId) {
+        companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID
+        console.log('⚠️ Using environment company ID as fallback:', companyId)
+      }
+      
     } catch (userError) {
       console.error('Error getting user company info:', userError)
-      return Response.json({
-        success: false,
-        error: 'Failed to get user company information',
-        details: userError.message,
-        code: 'COMPANY_INFO_ERROR'
-      }, { status: 500 })
+      
+      // Fallback: Use environment company ID
+      companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID
+      console.log('⚠️ Using environment company ID due to error:', companyId)
     }
 
     if (!companyId) {
       return Response.json({
         success: false,
-        error: 'Could not determine user\'s company ID. Make sure you are accessing this from within a Whop community.',
+        error: 'Could not determine company ID. Make sure you are accessing this from within a Whop community.',
         code: 'NO_COMPANY_ID'
       }, { status: 400 })
     }

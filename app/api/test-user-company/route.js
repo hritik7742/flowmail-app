@@ -22,39 +22,25 @@ export async function GET() {
       }, { status: 401 })
     }
 
-    // Get user's company information
-    let userInfo = null
+    // Get user's company information using correct Whop SDK methods
+    let userToken = null
     let companyId = null
-    let memberships = null
     
     try {
-      // Method 1: Get current user info
-      userInfo = await whopSdk.users.getCurrentUser()
-      console.log('User info from Whop:', JSON.stringify(userInfo, null, 2))
+      // Method 1: Get user token info (this should contain company context)
+      userToken = await whopSdk.verifyUserToken(headersList)
+      console.log('User token info:', JSON.stringify(userToken, null, 2))
       
-      // Extract company ID from user info
-      if (userInfo?.company?.id) {
-        companyId = userInfo.company.id
-        console.log('✅ Found company ID in user.company.id:', companyId)
-      } else if (userInfo?.companies && userInfo.companies.length > 0) {
-        companyId = userInfo.companies[0].id
-        console.log('✅ Found company ID in user.companies[0].id:', companyId)
+      // Extract company ID from user token
+      if (userToken?.companyId) {
+        companyId = userToken.companyId
+        console.log('✅ Found company ID in userToken.companyId:', companyId)
+      } else if (userToken?.company?.id) {
+        companyId = userToken.company.id
+        console.log('✅ Found company ID in userToken.company.id:', companyId)
       }
     } catch (userError) {
-      console.error('Error getting user info:', userError)
-    }
-
-    // Method 2: Get user's memberships
-    try {
-      memberships = await whopSdk.users.getMemberships()
-      console.log('User memberships:', JSON.stringify(memberships, null, 2))
-      
-      if (!companyId && memberships && memberships.length > 0) {
-        companyId = memberships[0].companyId
-        console.log('✅ Found company ID from memberships:', companyId)
-      }
-    } catch (membershipError) {
-      console.error('Error getting memberships:', membershipError)
+      console.error('Error getting user token info:', userError)
     }
 
     // Method 3: Try to get company from environment (fallback)
@@ -65,31 +51,28 @@ export async function GET() {
       success: true,
       user: {
         id: verifiedUserId,
-        info: userInfo,
-        memberships: memberships
+        token_info: userToken
       },
       company: {
-        from_user_info: userInfo?.company?.id || null,
-        from_companies_array: userInfo?.companies?.[0]?.id || null,
-        from_memberships: memberships?.[0]?.companyId || null,
+        from_user_token: userToken?.companyId || userToken?.company?.id || null,
         from_environment: envCompanyId,
         final_company_id: companyId
       },
       analysis: {
-        user_has_company_info: !!userInfo?.company,
-        user_has_companies_array: !!(userInfo?.companies && userInfo.companies.length > 0),
-        user_has_memberships: !!(memberships && memberships.length > 0),
+        user_token_has_company: !!(userToken?.companyId || userToken?.company?.id),
         company_id_determined: !!companyId,
-        using_environment_fallback: !companyId && !!envCompanyId
+        using_environment_fallback: !companyId && !!envCompanyId,
+        token_structure: Object.keys(userToken || {})
       },
       recommendations: companyId ? [
-        '✅ Company ID successfully determined from user data',
+        '✅ Company ID successfully determined from user token',
         'Each user will sync from their own company',
         'User isolation is working correctly'
       ] : [
-        '❌ Could not determine user\'s company ID',
+        '❌ Could not determine user\'s company ID from token',
         'This means all users will sync from the same company',
-        'Check Whop SDK methods and user permissions'
+        'Check if the app is properly installed in the Whop community',
+        'Verify the user token contains company information'
       ],
       timestamp: new Date().toISOString()
     })
