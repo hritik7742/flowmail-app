@@ -138,17 +138,50 @@ export async function POST(request) {
 
     console.log('✅ User verified and ready:', user.id)
 
-    // Get the company ID from environment
-    const companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID
-    console.log('Company ID:', companyId)
+    // CRITICAL: Get the company ID from the authenticated user, not environment variables
+    // This ensures each user syncs from THEIR company, not a fixed company
+    let companyId
+    
+    try {
+      // Get the user's company information from Whop
+      const userInfo = await whopSdk.users.getCurrentUser()
+      console.log('User info from Whop:', JSON.stringify(userInfo, null, 2))
+      
+      // Extract company ID from user info
+      if (userInfo?.company?.id) {
+        companyId = userInfo.company.id
+        console.log('✅ Using user\'s company ID:', companyId)
+      } else if (userInfo?.companies && userInfo.companies.length > 0) {
+        // If user has multiple companies, use the first one
+        companyId = userInfo.companies[0].id
+        console.log('✅ Using user\'s first company ID:', companyId)
+      } else {
+        // Fallback: try to get company from user's memberships
+        const memberships = await whopSdk.users.getMemberships()
+        if (memberships && memberships.length > 0) {
+          companyId = memberships[0].companyId
+          console.log('✅ Using company ID from user\'s membership:', companyId)
+        }
+      }
+    } catch (userError) {
+      console.error('Error getting user company info:', userError)
+      return Response.json({
+        success: false,
+        error: 'Failed to get user company information',
+        details: userError.message,
+        code: 'COMPANY_INFO_ERROR'
+      }, { status: 500 })
+    }
 
     if (!companyId) {
       return Response.json({
         success: false,
-        error: 'NEXT_PUBLIC_WHOP_COMPANY_ID is not configured',
-        code: 'MISSING_COMPANY_ID'
-      }, { status: 500 })
+        error: 'Could not determine user\'s company ID. Make sure you are accessing this from within a Whop community.',
+        code: 'NO_COMPANY_ID'
+      }, { status: 400 })
     }
+
+    console.log('🎯 Final Company ID for sync:', companyId)
 
     // FIXED: Use the correct Whop SDK method for getting memberships
     let realMembers = []
